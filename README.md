@@ -220,37 +220,6 @@ Menu : **Paramètres tournoi → 9 (Rapports) → 6 (Exporter en CSV)**.
 
 ---
 
-## Qualité du code (PEP8, flake8-html)
-
-Le projet vise un code propre et pédagogique.
-
-### Vérifier avec flake8
-
-```bash
-flake8 .
-```
-
-### Rapport HTML
-
-Fichier `.flake8` ou `setup.cfg` :
-
-```ini
-[flake8]
-format = html
-htmldir = flake-report
-max-line-length = 88
-extend-ignore = E203,W503
-```
-
-Puis :
-
-```bash
-flake8 .
-open flake-report/index.html  # selon OS
-```
-
----
-
 ## Structure recommandée du dépôt
 
 ```
