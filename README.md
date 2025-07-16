@@ -1,4 +1,4 @@
-# Logiciel de Gestion de Tournois d'Échecs (CLI hors‑ligne)
+# Logiciel de Gestion de Tournois d'Échecs (hors‑ligne)
 
 > Projet Python MVC pour gérer des tournois d'échecs **sans connexion Internet**, avec stockage **JSON**, menus en ligne de commande, synchronisation des joueurs, rapports et **export CSV**.
 
