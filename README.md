@@ -123,8 +123,6 @@ source env/bin/activate  # Windows: env/Scripts/activate
 pip install -r requirements.txt
 ```
 
-> `re` (regex) est un module standard ⇒ **ne pas** l’ajouter à `requirements.txt`.
-
 ---
 
 ## Lancement
