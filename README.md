@@ -254,7 +254,7 @@ open flake-report/index.html  # selon OS
 ## Structure recommandée du dépôt
 
 ```
-chess_tournament_cli/
+tournois_club_echecs/
 ├─ main.py
 ├─ requirements.txt
 ├─ README.md
