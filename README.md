@@ -104,7 +104,15 @@ Suivez ces étapes :
 4. **Voir la confirmation** :
 
    ```
-   ✅ Joueur "Alice Dupont" ajouté avec succès !
+   ✅ Joueur créé.
+
+   --- Informations du joueur ALICE Dupont ---
+
+   Date de naissance : 28/03/1989
+   ID : AB12568
+
+
+
    ```
 
 5. Le fichier `data/players.json` se met automatiquement à jour.
@@ -122,12 +130,6 @@ Suivez ces étapes :
 7. **Consulter** le classement final et les ronds joués.
 
 Les données sont sauvegardées sous : `data/tournaments/<nom_tournoi>.json`.
-
----
-
-## ⚙️ Configuration avancée
-
-Si vous souhaitez changer l’emplacement du dossier `data`, modifiez la variable `DATA_DIR` directement dans `config.py` ou créez votre propre branche avec la fonctionnalité de choix dynamique du dossier.
 
 ---
 
