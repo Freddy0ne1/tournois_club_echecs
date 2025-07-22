@@ -1,229 +1,158 @@
 """controllers/player_controller.py
-CRUD Joueurs + synchro tournois. Validation date de naissance JJ/MM/AAAA.
+Contrôleur pour gérer les joueurs.
 """
 
 import re
-from dataclasses import asdict, fields
-from typing import List
 from datetime import datetime
-
+from views.console_view import ConsoleView
 from models.player import Player
-from services.storage_service import (
-    load_players,
-    save_players,
-    load_tournaments,
-    save_tournaments,
-)
 
 
 class PlayerController:
-    """Contrôleur des joueurs."""
+    """Contrôleur pour gérer les joueurs."""
 
-    def __init__(self) -> None:
-        allowed = {f.name for f in fields(Player)}
-        self.players: List[Player] = [
-            Player(**{k: v for k, v in d.items() if k in allowed})
-            for d in load_players()
-        ]
-
-    # ---------------- Persistance ----------------
-    def _persist(self) -> None:
-        save_players([asdict(p) for p in self.players])
-
-    # ---------------- Helpers date naissance ----------------
-    @staticmethod
-    def _prompt_birthdate(
-        prompt: str, allow_blank: bool = False, default: str = ""
-    ) -> str:
-        """Boucle de saisie d'une date JJ/MM/AAAA.
-        - allow_blank=True : Entrée vide -> renvoie default (inchangé).
-        """
+    def _input_nonempty(self, prompt):
         while True:
-            raw = input(prompt).strip()
-            if allow_blank and raw == "":
-                return default
-            try:
-                dt = datetime.strptime(raw, "%d/%m/%Y")
-            except ValueError:
-                print("Format invalide. Exemple : 07/09/1985.")
-                continue
-            # Option : refuser dates futures
-            if dt > datetime.today():
-                print("Date dans le futur refusée.")
-                continue
-            return dt.strftime("%d/%m/%Y")
+            value = input(prompt).strip()
+            if value:
+                return value
+            print("\n🔴  Ce champ est obligatoire.\n")
 
-    # ---------------- CREATE ----------------
-    def create_player(self) -> None:
-        """Crée un joueur avec ID national, nom, prénom et date de naissance."""
-        print("\n=== Création d'un joueur ===")
-        # ID
+    def _get_sorted_players(self):
+        # Retourne la liste des joueurs ordonnés par nom puis prénom
+        return sorted(Player.registry, key=lambda p: (p.last_name, p.first_name))
+
+    def create_player(self):
+        """Crée un nouveau joueur et l'ajoute à la liste."""
+        print("\n--- Création d'un nouveau joueur ---\n")
+        # 1) Identifiant national
         while True:
-            pid = input("ID national (AB12345) : ").strip().upper()
-            if not re.fullmatch(r"AB\d{5}", pid):
-                print("Format invalide (AB + 5 chiffres).")
+            national_id = self._input_nonempty(
+                "Identifiant national (AB+5 chiffres) : "
+            ).upper()
+            if not re.match(r"AB\d{5}$", national_id):
+                print("\n❌ Format invalide. Exemple : AB12345\n")
                 continue
-            if any(p.id_national == pid for p in self.players):
-                print("ID déjà utilisé.")
+            if any(p.national_id == national_id for p in Player.registry):
+                print("\n❌ ID déjà utilisé.\n")
                 continue
             break
-        # Nom / Prénom
-        ln = input("Nom : ").strip().title()
-        fn = input("Prénom : ").strip().title()
-        # Date naissance validée
-        bd = self._prompt_birthdate("Date de naissance (JJ/MM/AAAA) : ")
-        # Ajout
-        self.players.append(Player(pid, ln, fn, bd))
-        self._persist()
-        print(f"✅ Joueur {fn} {ln} ajouté.")
 
-    # ---------------- READ ----------------
-    def list_players(self) -> None:
-        """Affiche la liste des joueurs triée par nom, prénom."""
-        print("\n=== Liste des joueurs ===")
-        if not self.players:
-            print("Aucun joueur enregistré.")
+        # 2) Nom et prénom
+        last_name = self._input_nonempty("Nom : ").upper()
+        first_name = self._input_nonempty("Prénom : ").capitalize()
+
+        # 3) Date de naissance
+        while True:
+            birth = self._input_nonempty("Date de naissance (jj/mm/aaaa) : ")
+            try:
+                datetime.strptime(birth, "%d/%m/%Y")
+                break
+            except ValueError:
+                print("\n❌ Format invalide. Exemple : 31/12/1990\n")
+
+        # 4) Création et sauvegarde
+        # ATTENTION à l'ordre des arguments !
+        new_player = Player(last_name, first_name, birth, national_id)
+        Player.save_all()
+        print("\n✅ Joueur créé.\n")
+        print(
+            f"--- Informations du joueur {new_player.last_name} {new_player.first_name} ---\n"
+        )
+        print(f"Date de naissance : {new_player.birth_date}")
+        print(f"ID : {new_player.national_id}")
+
+    def list_players(self):
+        """Affiche la liste des joueurs."""
+        players = self._get_sorted_players()
+        ConsoleView.show_players(players)
+
+    def _choose_player(self, action):
+        players = self._get_sorted_players()
+        if not players:
+            print("Aucun joueur disponible.")
+            return None
+        ConsoleView.show_players(players)
+        choice = input(f"\nNuméro du joueur à {action} : ").strip()
+        if not choice.isdigit():
+            print("Entrée invalide.")
+            return None
+        idx = int(choice)
+        if 1 <= idx <= len(players):
+            return players[idx - 1]
+        print("Indice hors plage.")
+        return None
+
+    def modify_player(self):
+        """Modifie les informations d'un joueur existant."""
+        print("\n--- Modification d'un joueur ---\n")
+        # Choisir le joueur à modifier
+        player = self._choose_player("modifier")
+        if not player:
             return
-        for idx, p in enumerate(
-            sorted(self.players, key=lambda x: (x.last_name, x.first_name)), 1
-        ):
-            print(
-                f"{idx}. {p.last_name} {p.first_name} [ID:{p.id_national}] Naissance : {p.birth_date}"
-            )
+        print(
+            f"\n--- Informations actuelles de {player.first_name} {player.last_name} ---"
+        )
+        print(f"ID : {player.national_id}")
+        print(f"Date de naissance : {player.birth_date}")
+        print("\nℹ️  Laisser vide pour conserver la valeur actuelle.\n")
+        # Modifier le nom
+        value = input(f"Nom [{player.last_name}] : ").strip()
+        if value:
+            player.last_name = value.upper()
+        # Modifier le prénom
+        value = input(f"Prénom [{player.first_name}] : ").strip()
+        if value:
+            player.first_name = value.capitalize()
+        # Modifier la date de naissance
+        while True:
+            value = input(f"Date de naissance [{player.birth_date}] : ").strip()
+            if value == "":
+                break
+            try:
+                datetime.strptime(value, "%d/%m/%Y")
+                player.birth_date = value
+                break
+            except ValueError:
+                print("❌ Format invalide. Exemple : 31/12/1990")
+        Player.save_all()
+        print("\n✅ Mise à jour effectuée.\n")
+        print("--- Nouvelles informations du joueur ---\n")
+        print(
+            f"{player.last_name} {player.first_name} - {player.birth_date} - ID: {player.national_id}"
+        )
+        return player
 
-    # ---------------- UPDATE ----------------
-    def update_player(self) -> None:
-        """Modifie un joueur en utilisant la même numérotation que l'affichage trié."""
-        if not self.players:
-            print("Aucun joueur.")
+    def delete_player(self):
+        """Supprime un joueur existant."""
+        print("\n--- Suppression d'un joueur ---\n")
+        # Choisir le joueur à supprimer
+        player = self._choose_player("supprimer")
+        if not player:
             return
+        confirm = input(
+            f"\n⚠️  Voulez-vous supprimer {player.first_name} {player.last_name} (o/N) ? : "
+        ).lower()
+        if confirm == "o":
+            Player.registry.remove(player)
+            Player.save_all()
+            print(f"\n✅ {player.first_name} {player.last_name} a été supprimé.")
 
-        print("\n=== Modifier un joueur ===")
-
-        # On construit *une seule fois* la liste triée qui sert à l'affichage ET à la sélection.
-        ordered = sorted(self.players, key=lambda p: (p.last_name, p.first_name))
-        for i, p in enumerate(ordered, 1):
-            print(f"{i}. {p.last_name} {p.first_name} [ID:{p.id_national}]")
-
-        key = input("Numéro ou ID : ").strip().upper()
-
-        # --- Recherche dans la liste triée ---
-        if key.isdigit():
-            idx = int(key) - 1
-            if 0 <= idx < len(ordered):
-                player = ordered[idx]
-            else:
-                print("Numéro invalide.")
-                return
+    def search_player(self):
+        """Recherche des joueurs par nom, prénom ou identifiant national."""
+        print("\n--- Recherche de joueurs ---\n")
+        term = input("Recherche : ").lower().strip()
+        results = []
+        for p in Player.registry:
+            if (
+                term in p.last_name.lower()
+                or term in p.first_name.lower()
+                or term in p.national_id.lower()
+                or term in p.birth_date.lower()
+            ):
+                results.append(p)
+        if results:
+            results = sorted(results, key=lambda p: (p.last_name, p.first_name))
+            ConsoleView.show_players(results)
         else:
-            player = next((p for p in self.players if p.id_national == key), None)
-            if not player:
-                print("Joueur introuvable.")
-                return
-
-        old_id = player.id_national
-
-        new_id = (
-            input(f"ID [{player.id_national}] : ").strip().upper() or player.id_national
-        )
-        if new_id != player.id_national:
-            if not re.fullmatch(r"AB\\d{5}", new_id):
-                print("Format invalide (AB12345).")
-                return
-            if any(p.id_national == new_id for p in self.players if p is not player):
-                print("ID déjà pris.")
-                return
-
-        new_ln = (
-            input(f"Nom [{player.last_name}] : ").strip().title() or player.last_name
-        )
-        new_fn = (
-            input(f"Prénom [{player.first_name}] : ").strip().title()
-            or player.first_name
-        )
-
-        # Date naissance validée (Entrée = inchangé)
-        prompt_bd = f"Date de naissance [{player.birth_date}] (Entrée = inchangé) : "
-        new_bd = self._prompt_birthdate(
-            prompt_bd, allow_blank=True, default=player.birth_date
-        )
-
-        # Applique
-        player.id_national = new_id
-        player.last_name = new_ln
-        player.first_name = new_fn
-        player.birth_date = new_bd
-
-        # Sauvegarde + synchro
-        self._persist()
-        self._sync_player_everywhere(old_id, player)
-        print(f"✅  Joueur {player.first_name} {player.last_name} mis à jour partout.")
-
-    # ---------------- DELETE ----------------
-    def delete_player(self) -> None:
-        """Supprime un joueur de la base joueurs (l'historique tournois reste)."""
-        if not self.players:
-            print("Aucun joueur.")
-            return
-
-        print("\n=== Supprimer un joueur ===")
-        ordered = sorted(self.players, key=lambda p: (p.last_name, p.first_name))
-        for i, p in enumerate(ordered, 1):
-            print(f"{i}. {p.last_name} {p.first_name} [ID:{p.id_national}]")
-        key = input("Numéro ou ID : ").strip().upper()
-
-        # par numéro
-        if key.isdigit():
-            idx = int(key) - 1
-            if 0 <= idx < len(ordered):
-                removed = ordered[idx]
-                self.players.remove(removed)
-                self._persist()
-                print(
-                    f"✅  Joueur {removed.first_name} {removed.last_name} supprimé de la base joueurs."
-                )
-                return
-            print("Numéro invalide.")
-            return
-
-        # par ID
-        for p in self.players:
-            if p.id_national == key:
-                self.players.remove(p)
-                self._persist()
-                print(
-                    f"✅  Joueur {p.first_name} {p.last_name} supprimé de la base joueurs."
-                )
-                return
-
-        print("Joueur introuvable.")
-
-    # ---------------- SYNCHRO GLOBALE ----------------
-    def _sync_player_everywhere(self, old_id: str, player: Player) -> None:
-        """Met à jour ce joueur dans *tous* les tournois persistés.
-        On n'écrase PAS les champs score ni autres données tournois.
-        """
-        tourneys = load_tournaments()  # liste de dicts
-        fields_copy = ["id_national", "last_name", "first_name", "birth_date"]
-        changed = False
-
-        for t in tourneys:
-            # update players list
-            for p in t.get("players", []):
-                if p.get("id_national") == old_id:
-                    for f in fields_copy:
-                        p[f] = getattr(player, f)
-                    changed = True
-
-            # update match ids
-            for rd in t.get("rounds", []):
-                for m in rd.get("matches", []):
-                    if m.get("player1_id") == old_id:
-                        m["player1_id"] = player.id_national
-                        changed = True
-                    if m.get("player2_id") == old_id:
-                        m["player2_id"] = player.id_national
-                        changed = True
-
-        if changed:
-            save_tournaments(tourneys)
+            print("Aucun résultat trouvé.")

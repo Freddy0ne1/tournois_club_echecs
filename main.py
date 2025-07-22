@@ -1,17 +1,8 @@
-"""main.py
-Point d'entrée du programme.
+"""Point d'entrée du programme.
+On initialise le contrôleur principal puis on lance la boucle CLI.
 """
 
-from controllers.menu_controller import MenuController
-from views.menu_view import welcome
-
-
-def main():
-    """Point d'entrée du programme."""
-
-    welcome()
-    MenuController().run()
-
+from controllers.main_controller import MainController
 
 if __name__ == "__main__":
-    main()
+    MainController().run()
