@@ -48,18 +48,18 @@ Bienvenue dans **Échecs_Tournois**, une application Python simple et interactiv
 1. **Cloner le dépôt**
 
    ```bash
-   git clone https://github.com/votre-profil/echecs_tournois.git
+   git clone https://github.com/Freddy0ne1/tournois_club_echecs
    cd echecs_tournois
    ```
 
 2. **Créer un environnement virtuel** (fortement recommandé)
 
    ```bash
-   python -m venv venv
+   python -m venv env
    # Windows
-   venv\\Scripts\\activate
+   source env/Scripts/activate
    # macOS / Linux
-   source venv/bin/activate
+   source env/bin/activate
    ```
 
 3. **Installer les dépendances**
@@ -100,7 +100,7 @@ Suivez ces étapes :
 
 1. **Choisir l’option** `1` puis `Entrée`.
 2. **Saisir le nom** du joueur quand le programme vous le demande.
-3. **Valider** la date de naissance au format `YYYY-MM-DD`.
+3. **Valider** la date de naissance au format `jj-mm-aaaa`.
 4. **Voir la confirmation** :
 
    ```
