@@ -71,7 +71,7 @@ class TournamentController:
             )
 
         # 3️⃣ Si on a dépassé le nombre de tentatives autorisées
-        print("❌ Nombre de tentatives dépassé. Opération annulée.")
+        print("🔁❌ Nombre de tentatives dépassé. Opération annulée.")
         return None
 
     def _input_date(self, prompt):
