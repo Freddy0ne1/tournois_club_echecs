@@ -76,7 +76,8 @@ class TournamentController:
                 attempt += 1
                 # Affiche un message d'erreur avec le nombre de tentatives restantes
                 print(
-                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}) - (ex. 31/12/2025). Veuillez réessayer.\n"
+                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}) "
+                    "- (ex. 31/12/2025). Veuillez réessayer.\n"
                 )
         print("\n❌ Nombre de tentatives dépassé. Opération annulée.")
         return None
@@ -169,8 +170,8 @@ class TournamentController:
             attempt += 1
             # Affiche un message d'erreur avec le nombre de tentatives restantes
             print(
-                f"\n❌ La date de fin doit être supérieure ou égale à la date de début.\
-                ({attempt}/{MAX_ATTEMPTS}).\n"
+                f"\n❌ La date de fin doit être supérieure ou égale à la date de début."
+                f"({attempt}/{MAX_ATTEMPTS}).\n"
             )
         if end_date is None:
             print("\n❌ Nombre de tentatives dépassé. Opération annulée.")
