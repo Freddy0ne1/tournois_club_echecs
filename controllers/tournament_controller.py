@@ -47,6 +47,10 @@ class TournamentController:
         #    (implémenté dans la méthode _load)
         self._load()
 
+    # -----------------------
+    #   SAISIE NON VIDE
+    # -----------------------
+
     def _input_nonempty(self, prompt):
         """
         Demande une saisie non vide à l'utilisateur·rice.
@@ -73,6 +77,10 @@ class TournamentController:
         # 3️⃣ Si on a dépassé le nombre de tentatives autorisées
         print("🔁❌ Nombre de tentatives dépassé. Opération annulée.")
         return None
+
+    # -----------------------
+    #   SAISIE D'UNE DATE
+    # -----------------------
 
     def _input_date(self, prompt):
         """
@@ -103,6 +111,10 @@ class TournamentController:
         # 3️⃣ Si on a épuisé toutes les tentatives sans succès
         print("\n❌ Nombre de tentatives dépassé. Opération annulée.")
         return None
+
+    # -----------------------
+    #   SÉLECTION D'UN TOURNOI
+    # -----------------------
 
     def _choose(self, action):
         """
