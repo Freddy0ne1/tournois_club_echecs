@@ -17,7 +17,7 @@ class Tournament:
     """Représente un tournoi d'échecs (système suisse simple)."""
 
     def __init__(self, name, place, start_date, end_date, description, total_rounds=4):
-        # 1. Infos de base du tournoi
+        # 1️⃣ Infos de base du tournoi
         self.name = name  # Nom du tournoi
         self.place = place  # Lieu où se déroule le tournoi
         self.start_date = start_date  # Date de début, format "jj/mm/aaaa"
@@ -25,17 +25,17 @@ class Tournament:
         self.description = description  # Texte libre pour décrire le tournoi
         self.total_rounds = total_rounds  # Nombre de rounds prévus (4 par défaut)
 
-        # 2. État général du tournoi
+        # 2️⃣ État général du tournoi
         self.status = (
             "non démarré"  # Statut actuel: "non démarré", "en cours" ou "terminé"
         )
         self.current_round_index = 0  # Nombre de rounds déjà joués (0 au lancement)
 
-        # 3. Conteneurs pour stocker les participants et les rounds
+        # 3️⃣ Conteneurs pour stocker les participants et les rounds
         self.players = []  # Liste des objets Player inscrits
         self.rounds = []  # Liste des objets Round déjà joués
 
-        # 4. Historique des appariements
+        # 4️⃣ Historique des appariements
         #    On garde une liste de tuples (ID_joueur1, ID_joueur2)
         #    pour ne pas refaire deux fois le même match
         self.history = []
@@ -47,13 +47,13 @@ class Tournament:
         # Affichage visuel pour suivre l’exécution
         print("\n▶️  Démarrage de l'appariement")
 
-        # 1. Vérification qu’on a un nombre pair de joueurs
+        # 1️⃣ Vérification qu’on a un nombre pair de joueurs
         print("  • Étape 1: vérification du nombre de joueurs")
         if len(self.players) % 2 != 0:
             # Impossible d’apparier un joueur seul → on stoppe et on signale l’erreur
             raise ValueError("Nombre de joueurs impair : impossible d'appariement.")
 
-        # 2. Détermination de l’ordre des joueurs
+        # 2️⃣ Détermination de l’ordre des joueurs
         if self.current_round_index == 0:
             # Premier round : on mélange totalement pour démarrer de façon aléatoire
             print("  • Étape 2: round 1 → mélange aléatoire")
@@ -80,7 +80,7 @@ class Tournament:
                 self.players[i:j] = subset
                 i = j  # On passe au groupe suivant
 
-        # 3. Construction des paires sans jamais refaire un même match
+        # 3️⃣ Construction des paires sans jamais refaire un même match
         print("  • Étape 3: construction des paires sans re-matchs")
         remaining = self.players[
             :
@@ -112,23 +112,23 @@ class Tournament:
 
     def start_next_round(self):
         """Démarre le round suivant."""
-        # 1. On vérifie qu’on n’a pas déjà joué tous les rounds
+        # 1️⃣ On vérifie qu’on n’a pas déjà joué tous les rounds
         if self.current_round_index >= self.total_rounds:
             raise ValueError("Tous les rounds ont déjà été joués.")
 
-        # 2. On forme les paires de joueurs
+        # 2️⃣ On forme les paires de joueurs
         matches = self._pair_players()
 
-        # 3. On crée le nouvel objet Round
+        # 3️⃣ On crée le nouvel objet Round
         new_round = Round(name=f"Round {self.current_round_index + 1}", matches=matches)
 
-        # 4. On l’ajoute à la liste des rounds déjà joués
+        # 4️⃣ On l’ajoute à la liste des rounds déjà joués
         self.rounds.append(new_round)
 
-        # 5. On passe au round suivant
+        # 5️⃣ On passe au round suivant
         self.current_round_index += 1
 
-        # 6. On met à jour le statut pour indiquer
+        # 6️⃣ On met à jour le statut pour indiquer
         #    qu’un round est en cours
         self.status = "en cours"
 
@@ -137,7 +137,7 @@ class Tournament:
         Enregistre les scores et clôture le round courant.
         `results` est une liste de tuples (num_round, num_match, score1, score2)
         """
-        # 1. Mise à jour des scores et des points
+        # 1️⃣ Mise à jour des scores et des points
         #    On parcourt chaque résultat fourni :
         #    - r_idx : index du round dans self.rounds
         #    - m_idx : index du match dans ce round
@@ -151,12 +151,12 @@ class Tournament:
             match.players[0].points += s1
             match.players[1].points += s2
 
-        # 2. Clôture du round courant
+        # 2️⃣ Clôture du round courant
         #    - current_round_index pointe sur le prochain à jouer,
         #      donc on ferme celui d’avant (index - 1)
         self.rounds[self.current_round_index - 1].close()
 
-        # 3. Si c’était le dernier round prévu,
+        # 3️⃣ Si c’était le dernier round prévu,
         #    on passe le tournoi en statut "terminé"
         if self.current_round_index >= self.total_rounds:
             self.status = "terminé"
@@ -165,13 +165,13 @@ class Tournament:
 
     def _file_path(self):
         """Renvoie le chemin du fichier JSON du tournoi."""
-        # 1. On construit le nom du fichier à partir du nom du tournoi
+        # 1️⃣ On construit le nom du fichier à partir du nom du tournoi
         #    - self.name.lower() : tout en minuscules pour homogénéité
         #    - .replace(" ", "_") : on remplace les espaces par des underscores
         #    - + ".json" : on ajoute l’extension JSON
         filename = self.name.lower().replace(" ", "_") + ".json"
 
-        # 2. On combine le dossier DATA_DIR avec ce nom de fichier
+        # 2️⃣ On combine le dossier DATA_DIR avec ce nom de fichier
         #    - DATA_DIR est un Path (chemin vers le dossier de sauvegarde)
         #    - l’opérateur “/” de pathlib construit le chemin complet
         return DATA_DIR / filename
@@ -179,12 +179,12 @@ class Tournament:
     def save(self):
         """Sauvegarde le tournoi en JSON."""
 
-        # 1. Création (si nécessaire) du dossier de stockage
+        # 1️⃣ Création (si nécessaire) du dossier de stockage
         #    - parents=True : crée tous les dossiers parents manquants
         #    - exist_ok=True : ne déclenche pas d’erreur si le dossier existe déjà
         DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-        # 2. Préparation des données à enregistrer
+        # 2️⃣ Préparation des données à enregistrer
         #    On construit un dictionnaire Python qui reflète l’état du tournoi
         data = {
             "name": self.name,
@@ -211,7 +211,7 @@ class Tournament:
             "history": self.history,
         }
 
-        # 3. Écriture du fichier JSON
+        # 3️⃣ Écriture du fichier JSON
         #    - open(...) : on ouvre le fichier en mode écriture "w"
         #    - encoding="utf-8" : pour gérer correctement tous les caractères
         with open(self._file_path(), "w", encoding="utf-8") as f:
