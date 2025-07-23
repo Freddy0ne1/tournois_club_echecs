@@ -12,6 +12,10 @@ from models.match import Match
 # Répertoire de sauvegarde des tournois
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "tournaments"
 
+# -----------------------
+#   INITIALISATION DU TOURNOI
+# -----------------------
+
 
 class Tournament:
     """Représente un tournoi d'échecs (système suisse simple)."""
@@ -40,7 +44,9 @@ class Tournament:
         #    pour ne pas refaire deux fois le même match
         self.history = []
 
-    # ---------- Logique d'appariement ----------
+    # -----------------------
+    #   APPARIEMENT DES JOUEURS
+    # -----------------------
 
     def _pair_players(self):
         """Crée les paires pour le round courant (système suisse simple)."""
@@ -110,6 +116,10 @@ class Tournament:
         print("✅ Appariements créés \n")
         return pairs
 
+    # -----------------------
+    #   DÉMARRAGE ROUND SUIVANT
+    # -----------------------
+
     def start_next_round(self):
         """Démarre le round suivant."""
         # 1️⃣ On vérifie qu’on n’a pas déjà joué tous les rounds
@@ -131,6 +141,10 @@ class Tournament:
         # 6️⃣ On met à jour le statut pour indiquer
         #    qu’un round est en cours
         self.status = "en cours"
+
+    # -----------------------
+    #   ENREGISTREMENT DES SCORES
+    # -----------------------
 
     def record_results(self, results):
         """
@@ -161,7 +175,9 @@ class Tournament:
         if self.current_round_index >= self.total_rounds:
             self.status = "terminé"
 
-    # ---------- Sauvegarde / Chargement ----------
+    # -----------------------
+    #   CHEMIN DU FICHIER JSON
+    # -----------------------
 
     def _file_path(self):
         """Renvoie le chemin du fichier JSON du tournoi."""
@@ -175,6 +191,10 @@ class Tournament:
         #    - DATA_DIR est un Path (chemin vers le dossier de sauvegarde)
         #    - l’opérateur “/” de pathlib construit le chemin complet
         return DATA_DIR / filename
+
+    # -----------------------
+    #   SAUVEGARDE DU TOURNOI
+    # -----------------------
 
     def save(self):
         """Sauvegarde le tournoi en JSON."""
@@ -219,6 +239,10 @@ class Tournament:
             # indent=4       : mise en forme lisible (4 espaces)
             # ensure_ascii=False : conserve les accents et caractères spéciaux
             json.dump(data, f, indent=4, ensure_ascii=False)
+
+    # -----------------------
+    #   CHARGEMENT D'UN TOURNOI
+    # -----------------------
 
     @classmethod
     def load(cls, filename):
@@ -285,7 +309,9 @@ class Tournament:
         # 9️⃣ Retourner l’objet Tournament reconstitué
         return tour
 
-    # ---------- Utilitaire calcul ----------
+    # -----------------------
+    #   RECALCUL DES POINTS
+    # -----------------------
 
     def _recalculate_points(self):
         """

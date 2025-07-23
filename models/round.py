@@ -4,6 +4,10 @@ Représente un round d'un tournoi d'échecs.
 
 from datetime import datetime
 
+# -----------------------
+#   CLASSE ROUND
+# -----------------------
+
 
 class Round:
     """Représente un round d'un tournoi d'échecs."""
@@ -23,6 +27,10 @@ class Round:
         # 4️⃣ Heure de fin / clôture :
         #    à None tant que le round n'est pas fermé via close()
         self.end_time = None
+
+    # -----------------------
+    #   CLÔTURE DU ROUND
+    # -----------------------
 
     def close(self):
         """Marque le round comme terminé en enregistrant l'heure de fin."""

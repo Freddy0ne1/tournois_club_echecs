@@ -278,7 +278,8 @@ class PlayerController:
         # 1️⃣ Affichage de l’en‑tête pour entrer en mode suppression
         print("\n--- Suppression d'un joueur ---\n")
 
-        # 2️⃣ Sélection du joueur à supprimer via _choose_player (affiche la liste et renvoie un Player ou None)
+        # 2️⃣ Sélection du joueur à supprimer via _choose_player
+        # - (affiche la liste et renvoie un Player ou None)
         player = self._choose_player("supprimer")
         if player is None:  # Si annulation ou saisie invalide
             return

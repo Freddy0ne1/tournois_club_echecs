@@ -8,6 +8,10 @@ from pathlib import Path
 # Chemin vers le fichier JSON contenant les données des joueurs
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "players.json"
 
+# -----------------------
+#   CLASSE PLAYER
+# -----------------------
+
 
 class Player:
     """Représente un joueur et garde la liste de tous les joueurs."""
@@ -39,6 +43,10 @@ class Player:
         # 4️⃣ Enregistrement du joueur dans la liste globale
         #    Cela permet de retrouver tous les joueurs chargés à tout moment
         Player.registry.append(self)
+
+    # -----------------------
+    #   CHARGEMENT DES JOUEURS
+    # -----------------------
 
     @classmethod
     def load_all(cls):
@@ -77,6 +85,10 @@ class Player:
 
         # 5️⃣ Retourner la liste complète des joueurs chargés
         return cls.registry
+
+    # -----------------------
+    #   SAUVEGARDE JOUEURS
+    # -----------------------
 
     @classmethod
     def save_all(cls):
