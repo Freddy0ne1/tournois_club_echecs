@@ -83,7 +83,7 @@ class PlayerController:
                 # 🅳 En cas d’erreur de format, incrémente le compteur et informe
                 attempt += 1
                 print(
-                    f"  ❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). Ex.: 31/12/1990"
+                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). Ex.: 31/12/1990\n"
                 )
 
         # 3️⃣ Si toutes les tentatives échouent, affiche un message d’abandon et retourne None
