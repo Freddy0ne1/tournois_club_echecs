@@ -173,7 +173,7 @@ class TournamentController:
         tour.save()
 
     # -----------------------
-    #   CRÉATION
+    #   CRÉATION TOURNOI
     # -----------------------
 
     def create_tournament(self):
@@ -253,7 +253,7 @@ class TournamentController:
         print(f"Nombre de tours  : {tour.total_rounds}")
 
     # -----------------------
-    #   MODIFICATION
+    #   MODIFICATION TOURNOI
     # -----------------------
 
     def modify_tournament(self):
@@ -342,7 +342,7 @@ class TournamentController:
         print(f"Nombre de tours  : {tour.total_rounds}")
 
     # -----------------------
-    #   SUPPRESSION
+    #   SUPPRESSION TOURNOI
     # -----------------------
 
     def delete_tournament(self):
@@ -376,7 +376,7 @@ class TournamentController:
         print(f"\n✅ Le tournoi '{tour.name}' - {tour.place} a été supprimé.")
 
     # -----------------------
-    #   LISTE
+    #   LISTE TOURNOI
     # -----------------------
 
     def list_tournaments(self):
