@@ -1,6 +1,10 @@
 class ConsoleView:
     """Affiche les menus et les données du tournoi dans la console."""
 
+    # -----------------------
+    #   AFFICHAGE DU MENU
+    # -----------------------
+
     @staticmethod
     def menu(title, options):
         """
@@ -30,6 +34,10 @@ class ConsoleView:
             # 4️⃣ En cas d'erreur, on affiche un message et on redemande
             print(f"❌ Option invalide, entrez un nombre entre 1 et {len(options)}.")
 
+    # -----------------------
+    #   AFFICHAGE DES JOUEURS
+    # -----------------------
+
     @staticmethod
     def show_players(players):
         """
@@ -47,6 +55,10 @@ class ConsoleView:
                 f"{idx}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
             )
 
+    # -----------------------
+    #   AFFICHAGE DES TOURNOIS
+    # -----------------------
+
     @staticmethod
     def show_tournaments(tournaments):
         """
@@ -62,6 +74,10 @@ class ConsoleView:
                 f"{t.total_rounds} tours - {len(t.players)} joueurs - statut : {t.status}"
             )
 
+    # -----------------------
+    #   AFFICHAGE DU CLASSEMENT
+    # -----------------------
+
     @staticmethod
     def show_leaderboard(tour):
         """
@@ -76,6 +92,10 @@ class ConsoleView:
         # 2️⃣ Affiche le rang, le nom complet et le score de chaque joueur
         for rank, p in enumerate(ordered, 1):
             print(f"{rank}. {p.last_name} {p.first_name} - {p.points} pts")
+
+    # -----------------------
+    #   AFFICHAGE D'UN ROUND
+    # -----------------------
 
     @staticmethod
     def show_round(round_obj):

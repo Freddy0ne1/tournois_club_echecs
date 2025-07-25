@@ -79,7 +79,7 @@ class TournamentController:
         return None
 
     # -----------------------
-    #   SAISIE D'UNE DATE
+    #   SAISIE ET VALIDATION D'UNE DATE
     # -----------------------
 
     def _input_date(self, prompt):
@@ -148,7 +148,7 @@ class TournamentController:
         return None
 
     # -----------------------
-    #   CHARGEMENT / RELOAD
+    #   CHARGEMENT DES TOURNOIS
     # -----------------------
 
     def _load(self):
@@ -173,7 +173,7 @@ class TournamentController:
                 self._tours.append(tour)
 
     # -----------------------
-    #   SAUVEGARDE
+    #   SAUVEGARDE D'UN TOURNOI
     # -----------------------
 
     def _save(self, tour):

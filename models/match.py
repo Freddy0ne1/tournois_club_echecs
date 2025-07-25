@@ -2,6 +2,10 @@
 Représente un match entre deux joueurs et leurs scores.
 """
 
+# -----------------------
+#   CLASSE MATCH
+# -----------------------
+
 
 class Match:
     """Représente un match entre deux joueurs et leurs scores."""
@@ -13,6 +17,10 @@ class Match:
         # 2️⃣ Stocke toujours les deux scores ensemble
         #    self.scores est un tuple (score1, score2)
         self.scores = (score1, score2)
+
+    # -----------------------
+    #   SÉRIALISATION DU MATCH
+    # -----------------------
 
     def serialize(self):
         """Prépare ce match pour l'enregistrer en JSON."""

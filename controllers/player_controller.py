@@ -8,12 +8,16 @@ from views.console_view import ConsoleView
 from models.player import Player
 
 # -----------------------
-#   Constantes globales
+#   LIMITE DE TENTATIVES
 # -----------------------
 
 # 1️⃣ Nombre maximal de tentatives pour chaque saisie obligatoire
 #    Utilisé par les méthodes d’entrée pour limiter les boucles d’invite.
 MAX_ATTEMPTS = 3
+
+# -----------------------
+#   CONTROLEUR JOUEURS
+# -----------------------
 
 
 class PlayerController:
@@ -26,10 +30,8 @@ class PlayerController:
     # lister tous les joueurs, supprimer et rechercher.
 
     # -----------------------
-    #   MÉTHODES D’AIDE
+    #   SAISIE NON VIDE
     # -----------------------
-
-    # -------- Demande de saisie obligatoire ---------
 
     def _input_nonempty(self, prompt):
         """
@@ -59,7 +61,9 @@ class PlayerController:
         print("❌ Nombre de tentatives dépassé. Opération abandonnée.")
         return None
 
-    # -------- Demande de saisie date ---------
+    # -----------------------
+    #   SAISIE ET VALIDATION D'UNE DATE
+    # -----------------------
 
     def _input_date(self, prompt_text):
         """
@@ -90,7 +94,9 @@ class PlayerController:
         print("🔁❌ Nombre de tentatives dépassé. Opération abandonnée.")
         return None
 
-    # -------- Liste triée joueur de la base ---------
+    # -----------------------
+    #   TRI ALPHABÉTIQUE DES JOUEURS
+    # -----------------------
 
     def _get_sorted_players(self):
         """
@@ -99,11 +105,13 @@ class PlayerController:
         # 1️⃣ Récupère la liste de tous les joueurs depuis registry
         # 2️⃣ Utilise sorted() pour créer une nouvelle liste triée
         #    - key=lambda p: (p.last_name, p.first_name) trie d’abord sur le nom,
-        #      puis sur le prénom pour départager les homonymes
+        #      : tri alphabétique sur le nom puis le prénom
         # 3️⃣ Retourne cette liste triée sans modifier l’original registry
         return sorted(Player.registry, key=lambda p: (p.last_name, p.first_name))
 
-    # -------- sélectionner un joueur ---------
+    # -----------------------
+    #   SÉLECTION D'UN JOUEUR
+    # -----------------------
 
     def _choose_player(self, action):
         """
@@ -162,9 +170,10 @@ class PlayerController:
             national_id = national_id.upper()
 
             # 🅲 Vérifie le format "AB" suivi de 5 chiffres
+            #    - regex r"AB\d{5}$": commence par "AB" puis exactement 5 digits
             if not re.match(r"AB\d{5}$", national_id):
                 print(
-                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). Ex. : AB12345\n"
+                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). Ex. : AB12345\n"
                 )
                 continue
 
