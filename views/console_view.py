@@ -1,3 +1,11 @@
+"""
+Module console_view
+-------------------
+Ce module contient la classe ConsoleView qui affiche les menus et
+les données des tournois dans la console.
+"""
+
+
 class ConsoleView:
     """Affiche les menus et les données du tournoi dans la console."""
 
@@ -8,30 +16,35 @@ class ConsoleView:
     @staticmethod
     def menu(title, options):
         """
-        Affiche un menu numéroté et demande une sélection valide.
-        title   : titre du menu (str)
-        options : liste de textes d'options (list de str)
-        Retourne l'entier choisi par l'utilisateur.
+        Affiche un menu interactif numéroté et retourne le choix sélectionné.
+
+        Paramètres :
+        - title (str)   : le titre du menu à afficher.
+        - options (list): liste de chaînes représentant les différentes options.
+
+        Retour :
+        - int : numéro de l'option choisie par l'utilisateur (1 = première option).
         """
-        # 1️⃣ Affiche le titre du menu entouré de séparateurs
+        # 1️⃣ Affiche un en-tête clair pour présenter le menu
         print(f"\n=== {title} ===")
 
-        # 2️⃣ Affiche chaque option numérotée
+        # 2️⃣ Parcourt toutes les options et les affiche avec une numérotation
         for i, option in enumerate(options, 1):
             print(f"{i}. {option}")
 
-        # 3️⃣ Boucle jusqu'à obtenir un choix valide
+        # 3️⃣ Boucle jusqu'à obtenir une saisie valide
         while True:
-            choice = input(
-                "Votre choix : "
-            ).strip()  # on récupère la saisie et on enlève les espaces
-            if choice.isdigit():  # vérifie que c'est un nombre
+            # 🅰 Demande une saisie utilisateur et supprime les espaces inutiles
+            choice = input("Votre choix : ").strip()
+
+            # 🅱 Vérifie si la saisie est bien un nombre entier
+            if choice.isdigit():
                 num = int(choice)
-                if (
-                    1 <= num <= len(options)
-                ):  # vérifie que le nombre est dans la bonne plage
-                    return num  # retourne le choix valide
-            # 4️⃣ En cas d'erreur, on affiche un message et on redemande
+                # 🅲 Vérifie si ce nombre est dans la plage d'options disponibles
+                if 1 <= num <= len(options):
+                    return num  # choix valide → on retourne le numéro choisi
+
+            # 4️⃣ En cas d'erreur (non nombre ou hors plage), on réaffiche un message
             print(f"❌ Option invalide, entrez un nombre entre 1 et {len(options)}.")
 
     # -----------------------
@@ -41,15 +54,24 @@ class ConsoleView:
     @staticmethod
     def show_players(players):
         """
-        Affiche la liste des joueurs, triée par nom puis prénom.
-        players : liste d'objets Player
+        Affiche une liste de joueurs sous forme numérotée et triée.
+
+        Paramètres :
+        - players (list) : liste d'objets Player à afficher.
+
+        Affichage :
+        - Chaque ligne contient :
+            numéro. NOM Prénom | Identifiant | Date de naissance
         """
+        # 1️⃣ Affiche un titre clair avant la liste
         print("\n--- Liste des joueurs ---")
 
-        # 1️⃣ Trie pour un affichage alphabétique
+        # 2️⃣ Trie la liste reçue par ordre alphabétique
+        #    - d'abord par le nom (last_name)
+        #    - puis par le prénom (first_name)
         players_sorted = sorted(players, key=lambda p: (p.last_name, p.first_name))
 
-        # 2️⃣ Affiche chaque joueur avec son numéro, son nom complet et ses infos
+        # 3️⃣ Parcourt la liste triée et affiche chaque joueur avec un numéro
         for idx, p in enumerate(players_sorted, 1):
             print(
                 f"{idx}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
@@ -62,12 +84,19 @@ class ConsoleView:
     @staticmethod
     def show_tournaments(tournaments):
         """
-        Affiche la liste des tournois.
-        tournaments : liste d'objets Tournament
+        Affiche une liste numérotée de tournois et leurs informations principales.
+
+        Paramètres :
+        - tournaments (list) : liste d'objets Tournament à afficher.
+
+        Affichage :
+        - Chaque ligne contient :
+            numéro. Nom - Lieu - Date début → Date fin - Nb tours - Nb joueurs - Statut
         """
+        # 1️⃣ Affiche un titre clair avant la liste
         print("\n--- Liste des tournois ---")
 
-        # 1️⃣ Parcourt chaque tournoi et affiche ses principales données
+        # 2️⃣ Parcourt la liste des tournois et affiche les informations clés pour chacun
         for idx, t in enumerate(tournaments, 1):
             print(
                 f"{idx}. {t.name} - {t.place} - {t.start_date} → {t.end_date} - "
@@ -79,17 +108,25 @@ class ConsoleView:
     # -----------------------
 
     @staticmethod
-    def show_leaderboard(tour):
+    def show_leaderboard(tournament):
         """
-        Affiche le classement pour un tournoi donné.
-        tour : objet Tournament
+        Affiche le classement des joueurs pour un tournoi donné.
+
+        Paramètres :
+        - tournament (Tournament) : tournoi dont on veut afficher le classement.
+
+        Affichage :
+        - Classement trié par points décroissants.
+        - Chaque ligne contient :
+            rang. NOM Prénom - points pts
         """
-        print(f"\n=== Classement : {tour.name} ===")
+        # 1️⃣ Affiche un titre avec le nom du tournoi
+        print(f"\n=== Classement : {tournament.name} ===")
 
-        # 1️⃣ Trie les joueurs par points décroissants
-        ordered = sorted(tour.players, key=lambda p: p.points, reverse=True)
+        # 2️⃣ Trie les joueurs par nombre de points décroissant
+        ordered = sorted(tournament.players, key=lambda p: p.points, reverse=True)
 
-        # 2️⃣ Affiche le rang, le nom complet et le score de chaque joueur
+        # 3️⃣ Affiche le classement avec rang, nom complet et points
         for rank, p in enumerate(ordered, 1):
             print(f"{rank}. {p.last_name} {p.first_name} - {p.points} pts")
 
@@ -100,14 +137,24 @@ class ConsoleView:
     @staticmethod
     def show_round(round_obj):
         """
-        Affiche les détails d'un round :
-        round_obj : objet Round
+        Affiche les informations d'un round précis.
+
+        Paramètres :
+        - round_obj (Round) : round à afficher
+
+        Affichage :
+        - En-tête indiquant le nom du round, la date/heure de début et
+        la date/heure de fin (ou "en cours").
+        - La liste des matchs du round avec le format :
+            numéro. NOM1 Prénom1 score1 - score2 NOM2 Prénom2
         """
-        # 1️⃣ Détermine si le round est toujours en cours ou déjà terminé
+        # 1️⃣ Détermine le statut du round : terminé (end_time) ou en cours
         status = round_obj.end_time or "en cours"
+
+        # 2️⃣ Affiche l'en‑tête du round avec sa période
         print(f"\n--- {round_obj.name} : {round_obj.start_time} → {status} ---")
 
-        # 2️⃣ Affiche chaque match avec les noms et scores des deux joueurs
+        # 3️⃣ Parcourt et affiche chaque match de ce round
         for idx, m in enumerate(round_obj.matches, 1):
             p1, p2 = m.players
             s1, s2 = m.scores

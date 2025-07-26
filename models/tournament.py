@@ -18,128 +18,216 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "tournaments"
 
 
 class Tournament:
-    """Représente un tournoi d'échecs (système suisse simple)."""
+    """
+    Représente un tournoi d'échecs basé sur un système suisse simple.
 
+    Attributs :
+        - name           : Nom du tournoi
+        - place          : Lieu où se déroule le tournoi
+        - start_date     : Date de début ("jj/mm/aaaa")
+        - end_date       : Date de fin ("jj/mm/aaaa")
+        - description    : Description courte du tournoi
+        - total_rounds   : Nombre de rounds prévus (par défaut : 4)
+        - status         : Statut actuel ("non démarré", "en cours", "terminé")
+        - current_round_index : Nombre de rounds déjà joués
+        - players        : Liste des joueurs inscrits (objets Player)
+        - rounds         : Liste des rounds joués (objets Round)
+        - history        : Historique des matchs (tuples d'ID de joueurs)
+    """
+
+    # ------- Initialisation d'un nouvel objet tournoi -------
     def __init__(self, name, place, start_date, end_date, description, total_rounds=4):
-        # 1️⃣ Infos de base du tournoi
+        """
+        Initialise un nouveau tournoi avec ses informations principales.
+        """
+
+        # 1️⃣ Informations générales du tournoi
         self.name = name  # Nom du tournoi
-        self.place = place  # Lieu où se déroule le tournoi
-        self.start_date = start_date  # Date de début, format "jj/mm/aaaa"
-        self.end_date = end_date  # Date de fin, format "jj/mm/aaaa"
-        self.description = description  # Texte libre pour décrire le tournoi
-        self.total_rounds = total_rounds  # Nombre de rounds prévus (4 par défaut)
+        self.place = place  # Lieu où il se déroule
+        self.start_date = start_date  # Date de début (format jj/mm/aaaa)
+        self.end_date = end_date  # Date de fin (format jj/mm/aaaa)
+        self.description = description  # Courte description
+        self.total_rounds = total_rounds  # Nombre de rounds prévus (par défaut 4)
 
-        # 2️⃣ État général du tournoi
-        self.status = (
-            "non démarré"  # Statut actuel: "non démarré", "en cours" ou "terminé"
-        )
-        self.current_round_index = 0  # Nombre de rounds déjà joués (0 au lancement)
+        # 2️⃣ Suivi de l'état du tournoi
+        #    - "non démarré" par défaut
+        #    - "en cours" après lancement
+        #    - "terminé" à la fin
+        self.status = "non démarré"
+        self.current_round_index = 0  # Nombre de rounds joués (aucun au début)
 
-        # 3️⃣ Conteneurs pour stocker les participants et les rounds
-        self.players = []  # Liste des objets Player inscrits
-        self.rounds = []  # Liste des objets Round déjà joués
+        # 3️⃣ Participants et rounds
+        self.players = []  # Liste d'objets Player inscrits
+        self.rounds = []  # Liste d'objets Round générés au fur et à mesure
 
-        # 4️⃣ Historique des appariements
-        #    On garde une liste de tuples (ID_joueur1, ID_joueur2)
-        #    pour ne pas refaire deux fois le même match
+        # 4️⃣ Historique des matchs joués (évite de rejouer les mêmes)
+        #    Chaque élément est un tuple (ID_joueur1, ID_joueur2)
         self.history = []
 
     # -----------------------
     #   APPARIEMENT DES JOUEURS
     # -----------------------
 
+    # ------- Génération des appariements de joueurs (système suisse) -------
     def _pair_players(self):
-        """Crée les paires pour le round courant (système suisse simple)."""
-        # Affichage visuel pour suivre l’exécution
+        """
+        Crée les paires pour le round courant selon le système suisse.
+        Étapes :
+        1. Vérifie qu'il y a un nombre pair de joueurs.
+        2. Prépare l'ordre des joueurs (aléatoire au 1er round, par points sinon).
+        3. Génère les paires en évitant les matches déjà joués.
+        Retourne une liste d'objets Match.
+        """
         print("\n▶️  Démarrage de l'appariement")
 
-        # 1️⃣ Vérification qu’on a un nombre pair de joueurs
+        # 1️⃣ Vérifie que le nombre de joueurs est valide
+        self._check_even_players()
+
+        # 2️⃣ Prépare l'ordre des joueurs selon le round
+        self._prepare_players_order()
+
+        # 3️⃣ Construit les appariements et retourne la liste
+        pairs = self._build_pairs()
+        print("✅ Appariements créés \n")
+        return pairs
+
+    # ------- Vérification que le nombre de joueurs est pair -------
+    def _check_even_players(self):
+        """
+        Vérifie que le nombre de joueurs est pair.
+        Étapes :
+        1. Affiche une étape d'information.
+        2. Lève une erreur si le nombre de joueurs est impair.
+        """
+        # 1️⃣ Affiche l'étape de vérification
         print("  • Étape 1: vérification du nombre de joueurs")
+
+        # 2️⃣ Si le nombre de joueurs est impair, on bloque le processus
         if len(self.players) % 2 != 0:
-            # Impossible d’apparier un joueur seul → on stoppe et on signale l’erreur
             raise ValueError("Nombre de joueurs impair : impossible d'appariement.")
 
-        # 2️⃣ Détermination de l’ordre des joueurs
+    # ------- Préparer l'ordre des joueurs avant un round -------
+    def _prepare_players_order(self):
+        """
+        Prépare l'ordre des joueurs pour le round courant.
+        Étapes :
+        1. Si c'est le premier round, mélange aléatoirement tous les joueurs.
+        2. Sinon, trie par points décroissants et mélange les groupes de joueurs
+        ayant le même nombre de points.
+        """
+        # 1️⃣ Premier round : ordre aléatoire complet
         if self.current_round_index == 0:
-            # Premier round : on mélange totalement pour démarrer de façon aléatoire
             print("  • Étape 2: round 1 → mélange aléatoire")
             random.shuffle(self.players)
         else:
-            # Rounds suivants : on classe par points décroissants
+            # 2️⃣ Rounds suivants : tri par points décroissants
             print("  • Étape 2: rounds suivants → tri par points")
             self.players.sort(key=lambda p: p.points, reverse=True)
+            # Puis mélange des groupes de points égaux
+            self._shuffle_equal_points_groups()
 
-            # Dans chaque groupe de même nombre de points, on mélange pour éviter les biais
-            i = 0
-            while i < len(self.players):
-                # On cherche la tranche de joueurs ayant exactement les mêmes points
-                j = i + 1
-                while (
-                    j < len(self.players)
-                    and self.players[j].points == self.players[i].points
-                ):
-                    j += 1
-                # On mélange ce sous-groupe
-                subset = self.players[i:j]
-                random.shuffle(subset)
-                # On réinjecte le sous-groupe mélangé à sa place
-                self.players[i:j] = subset
-                i = j  # On passe au groupe suivant
+    # ------- Mélanger les groupes de joueurs avec le même nombre de points -------
+    def _shuffle_equal_points_groups(self):
+        """
+        Mélange aléatoirement les sous-groupes de joueurs ayant le même nombre de points.
+        """
+        # 1️⃣ Parcourt la liste des joueurs et identifie les groupes par points
+        i = 0
+        while i < len(self.players):
+            j = i + 1
+            while (
+                j < len(self.players)
+                and self.players[j].points == self.players[i].points
+            ):
+                j += 1
 
-        # 3️⃣ Construction des paires sans jamais refaire un même match
+            # 2️⃣ Mélange le sous-groupe et le réinjecte dans la liste principale
+            subset = self.players[i:j]
+            random.shuffle(subset)
+            self.players[i:j] = subset
+
+            # 3️⃣ Passe au groupe suivant
+            i = j
+
+    # ------- Construction des appariements pour un round -------
+    def _build_pairs(self):
+        """
+        Construit la liste des paires de joueurs pour ce round.
+        Étapes :
+        1. Travaille sur une copie de la liste des joueurs restants.
+        2. Retire les joueurs un à un et leur trouve un partenaire disponible.
+        3. Crée les objets Match et met à jour l'historique des appariements.
+        4. Retourne la liste des paires.
+        """
         print("  • Étape 3: construction des paires sans re-matchs")
-        remaining = self.players[
-            :
-        ]  # copie pour travailler sans modifier self.players direct
+
+        # 1️⃣ Copie de la liste des joueurs pour travailler proprement
+        remaining = self.players[:]
         pairs = []
 
-        # Tant qu’il reste des joueurs à apparier :
+        # 2️⃣ Boucle tant qu'il reste des joueurs à apparier
         while remaining:
-            p1 = remaining.pop(0)  # on prend le premier joueur
-            # On cherche un adversaire n’ayant jamais été contre p1
-            partner_idx = 0
-            for k, p2 in enumerate(remaining):
-                duo = (p1.national_id, p2.national_id)
-                duo_r = (p2.national_id, p1.national_id)
-                # si ni duo ni duo inversé ne sont dans l’historique, c’est valide
-                if duo not in self.history and duo_r not in self.history:
-                    partner_idx = k
-                    break
-            # On retire l’adversaire choisi de la liste
+            p1 = remaining.pop(0)
+            # Trouver l'indice du partenaire compatible
+            partner_idx = self._find_partner_index(p1, remaining)
+            # Retirer le partenaire et créer un match
             p2 = remaining.pop(partner_idx)
-            # On crée le Match et on l’ajoute à la liste
             pairs.append(Match(p1, p2))
-            # On enregistre cet appariement pour éviter de le refaire plus tard
+            # Ajouter cet appariement à l'historique
             self.history.append((p1.national_id, p2.national_id))
 
-        # Fin de l’appariement
-        print("✅ Appariements créés \n")
         return pairs
+
+    # ------- Recherche d'un partenaire valide pour l'appariement -------
+    def _find_partner_index(self, p1, remaining):
+        """
+        Trouve l'indice du partenaire valide pour p1 parmi les joueurs restants.
+        Critère :
+        - Le duo (p1, p2) ne doit pas avoir déjà été rencontré dans l'historique.
+        """
+        # 1️⃣ Parcourt tous les joueurs restants
+        for k, p2 in enumerate(remaining):
+            duo = (p1.national_id, p2.national_id)
+            duo_r = (p2.national_id, p1.national_id)
+            # 2️⃣ Vérifie si cette paire est nouvelle
+            if duo not in self.history and duo_r not in self.history:
+                return k
+        # 3️⃣ Si aucun partenaire valide trouvé, prend le premier par défaut
+        return 0
 
     # -----------------------
     #   DÉMARRAGE ROUND SUIVANT
     # -----------------------
 
     def start_next_round(self):
-        """Démarre le round suivant."""
-        # 1️⃣ On vérifie qu’on n’a pas déjà joué tous les rounds
+        """
+        Démarre le round suivant dans le tournoi.
+        Étapes :
+        1. Vérifie que tous les rounds prévus n'ont pas déjà été joués.
+        2. Génère les appariements des joueurs via _pair_players().
+        3. Crée un objet Round pour ce nouveau round.
+        4. Ajoute ce round à la liste des rounds existants.
+        5. Met à jour l'indice du round courant.
+        6. Met à jour le statut du tournoi pour indiquer qu'il est en cours.
+        """
+
+        # 1️⃣ Vérifie qu'il reste encore des rounds à jouer
         if self.current_round_index >= self.total_rounds:
             raise ValueError("Tous les rounds ont déjà été joués.")
 
-        # 2️⃣ On forme les paires de joueurs
+        # 2️⃣ Crée les appariements pour ce round
         matches = self._pair_players()
 
-        # 3️⃣ On crée le nouvel objet Round
+        # 3️⃣ Instancie un nouvel objet Round pour représenter ce round
         new_round = Round(name=f"Round {self.current_round_index + 1}", matches=matches)
 
-        # 4️⃣ On l’ajoute à la liste des rounds déjà joués
+        # 4️⃣ Ajoute ce round à la liste des rounds déjà créés
         self.rounds.append(new_round)
 
-        # 5️⃣ On passe au round suivant
+        # 5️⃣ Incrémente l'indice du round courant
         self.current_round_index += 1
 
-        # 6️⃣ On met à jour le statut pour indiquer
-        #    qu’un round est en cours
+        # 6️⃣ Met à jour le statut général du tournoi
         self.status = "en cours"
 
     # -----------------------
@@ -148,30 +236,38 @@ class Tournament:
 
     def record_results(self, results):
         """
-        Enregistre les scores et clôture le round courant.
-        `results` est une liste de tuples (num_round, num_match, score1, score2)
+        Enregistre les scores des matchs d'un round et met à jour l'état du tournoi.
+
+        Paramètres
+        ----------
+        results : list[tuple]
+            Liste de tuples au format (num_round, num_match, score1, score2)
+            - num_round : index du round (0-based)
+            - num_match : index du match dans ce round
+            - score1 / score2 : points attribués aux deux joueurs
+
+        Étapes :
+        1. Met à jour les scores et les points pour chaque match.
+        2. Clôture le round en cours (mise à jour de end_time).
+        3. Si le dernier round vient d'être joué, passe le tournoi en statut "terminé".
         """
+
         # 1️⃣ Mise à jour des scores et des points
-        #    On parcourt chaque résultat fourni :
-        #    - r_idx : index du round dans self.rounds
-        #    - m_idx : index du match dans ce round
-        #    - s1, s2: scores respectifs du joueur 1 et du joueur 2
         for r_idx, m_idx, s1, s2 in results:
-            # a) On récupère l’objet Match correspondant
+            # a) Récupère l'objet Match correspondant dans le bon round
             match = self.rounds[r_idx].matches[m_idx]
-            # b) On stocke les scores dans l’objet Match
+            # b) Stocke les scores dans le match
             match.scores = (s1, s2)
-            # c) On ajoute les points aux joueurs
+            # c) Ajoute les points aux joueurs
             match.players[0].points += s1
             match.players[1].points += s2
 
-        # 2️⃣ Clôture du round courant
-        #    - current_round_index pointe sur le prochain à jouer,
-        #      donc on ferme celui d’avant (index - 1)
+        # 2️⃣ Clôture du round en cours
+        #    - current_round_index pointe vers le prochain round à jouer,
+        #      donc on ferme celui qui vient d'être joué (index - 1)
         self.rounds[self.current_round_index - 1].close()
 
-        # 3️⃣ Si c’était le dernier round prévu,
-        #    on passe le tournoi en statut "terminé"
+        # 3️⃣ Si le dernier round est atteint, passe le tournoi en "terminé"
         if self.current_round_index >= self.total_rounds:
             self.status = "terminé"
 
@@ -180,16 +276,24 @@ class Tournament:
     # -----------------------
 
     def _file_path(self):
-        """Renvoie le chemin du fichier JSON du tournoi."""
-        # 1️⃣ On construit le nom du fichier à partir du nom du tournoi
-        #    - self.name.lower() : tout en minuscules pour homogénéité
-        #    - .replace(" ", "_") : on remplace les espaces par des underscores
-        #    - + ".json" : on ajoute l’extension JSON
+        """
+        Construit et retourne le chemin complet du fichier JSON associé au tournoi.
+
+        Étapes :
+        1. Transforme le nom du tournoi en un nom de fichier standardisé.
+        - tout en minuscules
+        - espaces remplacés par des underscores "_"
+        - ajoute l'extension .json
+        2. Combine ce nom avec le dossier DATA_DIR pour former un chemin complet.
+
+        Retour
+        ------
+        Path : chemin du fichier JSON où sauvegarder/charger ce tournoi
+        """
+        # 1️⃣ Normalise le nom du tournoi pour générer un nom de fichier sûr
         filename = self.name.lower().replace(" ", "_") + ".json"
 
-        # 2️⃣ On combine le dossier DATA_DIR avec ce nom de fichier
-        #    - DATA_DIR est un Path (chemin vers le dossier de sauvegarde)
-        #    - l’opérateur “/” de pathlib construit le chemin complet
+        # 2️⃣ Construit le chemin complet en joignant DATA_DIR et le nom du fichier
         return DATA_DIR / filename
 
     # -----------------------
@@ -197,15 +301,27 @@ class Tournament:
     # -----------------------
 
     def save(self):
-        """Sauvegarde le tournoi en JSON."""
+        """
+        Sauvegarde l'état actuel du tournoi dans un fichier JSON.
+
+        Étapes :
+        1. S'assure que le dossier de stockage existe (DATA_DIR).
+        2. Prépare un dictionnaire Python représentant toutes les informations
+        importantes du tournoi (joueurs, rounds, historique, etc.).
+        3. Écrit ce dictionnaire dans un fichier JSON (lisible et encodé en UTF-8).
+
+        Remarque :
+        - Les joueurs sont enregistrés uniquement par leur identifiant national.
+        - Chaque round et match est converti dans un format simple (serialize).
+        """
 
         # 1️⃣ Création (si nécessaire) du dossier de stockage
-        #    - parents=True : crée tous les dossiers parents manquants
-        #    - exist_ok=True : ne déclenche pas d’erreur si le dossier existe déjà
+        #    - parents=True : crée automatiquement les dossiers parents
+        #    - exist_ok=True : ne lève pas d'erreur si le dossier existe déjà
         DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-        # 2️⃣ Préparation des données à enregistrer
-        #    On construit un dictionnaire Python qui reflète l’état du tournoi
+        # 2️⃣ Construction d'une structure de données simple (dictionnaire)
+        #    qui décrit complètement l'état du tournoi
         data = {
             "name": self.name,
             "place": self.place,
@@ -215,9 +331,13 @@ class Tournament:
             "total_rounds": self.total_rounds,
             "status": self.status,
             "current_round_index": self.current_round_index,
-            # Pour les joueurs, on ne stocke que leur identifiant unique
+            # On ne sauvegarde que les IDs des joueurs pour éviter
+            # d'écrire des objets Player complets dans le JSON
             "players": [p.national_id for p in self.players],
-            # Pour chaque round, on sauve son nom, ses matchs sérialisés et ses horaires
+            # Chaque round est converti en dictionnaire avec :
+            # - son nom
+            # - ses matchs (convertis via serialize)
+            # - ses dates de début et fin
             "rounds": [
                 {
                     "name": rnd.name,
@@ -227,112 +347,247 @@ class Tournament:
                 }
                 for rnd in self.rounds
             ],
-            # On conserve l’historique des appariements
+            # Historique des matchs déjà joués
             "history": self.history,
         }
 
-        # 3️⃣ Écriture du fichier JSON
-        #    - open(...) : on ouvre le fichier en mode écriture "w"
-        #    - encoding="utf-8" : pour gérer correctement tous les caractères
+        # 3️⃣ Écriture dans un fichier JSON
+        #    - self._file_path() donne le chemin complet du fichier
+        #    - indent=4 : rend le fichier lisible
+        #    - ensure_ascii=False : garde les caractères accentués
         with open(self._file_path(), "w", encoding="utf-8") as f:
-            # json.dump : transforme le dict en JSON et l’écrit dans le fichier
-            # indent=4       : mise en forme lisible (4 espaces)
-            # ensure_ascii=False : conserve les accents et caractères spéciaux
             json.dump(data, f, indent=4, ensure_ascii=False)
 
     # -----------------------
     #   CHARGEMENT D'UN TOURNOI
     # -----------------------
 
+    # ------- Chargement d'un tournoi complet depuis un fichier JSON -------
     @classmethod
     def load(cls, filename):
         """
-        Charge un tournoi depuis un fichier JSON et le renvoie.
-        `filename` doit être juste le nom du fichier (ex. 'mon_tournoi.json').
+        Charge un tournoi depuis un fichier JSON et le retourne sous forme d'objet Tournament.
+
+        Étapes principales :
+        1. Lecture du fichier JSON.
+        2. Création d'un objet Tournament avec les infos de base.
+        3. Restauration du statut et de l'avancement.
+        4. Association des joueurs (à partir de leurs IDs).
+        5. Reconstruction des rounds et des matchs.
+        6. Restauration de l'historique des appariements.
+        7. Recalcul des points.
+
+        Paramètre :
+            filename (str) : nom du fichier JSON (exemple : "mon_tournoi.json")
+
+        Retournament :
+            Tournament : un objet Tournament complet et prêt à être utilisé.
         """
-        # 1️⃣ Construire le chemin vers le fichier JSON
+        # 1️⃣ Lire les données JSON brutes
+        raw = cls._load_raw_data(filename)
+
+        # 2️⃣ Créer l'objet Tournament avec les infos générales
+        tournament = cls._restore_basic_info(raw)
+
+        # 3️⃣ Restaurer les joueurs inscrits
+        id_map = cls._restore_players(raw, tournament)
+
+        # 4️⃣ Restaurer les rounds et leurs matchs
+        cls._restore_rounds(raw, tournament, id_map)
+
+        # 5️⃣ Restaurer l'historique et recalculer les points
+        cls._restore_history_and_points(raw, tournament)
+
+        return tournament
+
+    # ------- Lecture brute des données JSON d'un tournoi -------
+    @staticmethod
+    def _load_raw_data(filename):
+        """
+        Lit un fichier JSON contenant les données d'un tournoi et
+        retourne son contenu sous forme de dictionnaire.
+
+        Paramètres :
+            filename (str) : nom du fichier JSON (exemple : "mon_tournoi.json")
+
+        Retournament :
+            dict : les données du fichier JSON converties en dictionnaire Python
+        """
+
+        # 1️⃣ Construire le chemin complet vers le fichier à lire
+        #    - DATA_DIR est le dossier contenant les fichiers de tournois
+        #    - l'opérateur "/" permet d'ajouter le nom du fichier au chemin
         path = DATA_DIR / filename
 
-        # 2️⃣ Lire le contenu du fichier
-        #    - ouverture en mode lecture ("r") avec encodage UTF‑8 pour gérer les accents
+        # 2️⃣ Ouvrir le fichier en mode lecture texte avec encodage UTF-8
+        #    - "r" = read (lecture seule)
+        #    - encoding="utf-8" pour bien gérer les caractères accentués
         with open(path, "r", encoding="utf-8") as f:
-            raw = json.load(f)  # raw est un dict Python issu du JSON
+            # 3️⃣ Charger le contenu du fichier JSON et le convertir en dictionnaire Python
+            data = json.load(f)
 
-        # 3️⃣ Créer l’objet Tournament avec les infos de base
-        tour = Tournament(
-            raw["name"],
-            raw["place"],
-            raw["start_date"],
-            raw["end_date"],
-            raw["description"],
-            raw["total_rounds"],
+        # 4️⃣ Retourner les données obtenues
+        return data
+
+    # ------- Restauration des infos de base d'un tournoi -------
+    @staticmethod
+    def _restore_basic_info(raw):
+        """
+        Restaure les informations de base d'un tournoi à partir d'un dictionnaire brut
+        (issu du fichier JSON) et retourne une instance de Tournament pré-remplie.
+
+        Paramètres :
+            raw (dict) : données du tournoi lues depuis le JSON
+
+        Retournament :
+            Tournament : une instance de Tournament avec ses attributs de base renseignés
+        """
+
+        # 1️⃣ Crée une nouvelle instance de Tournament en utilisant les champs principaux
+        #    - Ces champs sont directement lus dans le dictionnaire `raw`
+        #    - Les autres données (joueurs, rounds, historique) seront ajoutées ensuite
+        tournament = Tournament(
+            raw["name"],  # Nom du tournoi
+            raw["place"],  # Lieu du tournoi
+            raw["start_date"],  # Date de début (format "jj/mm/aaaa")
+            raw["end_date"],  # Date de fin (format "jj/mm/aaaa")
+            raw["description"],  # Description du tournoi
+            raw["total_rounds"],  # Nombre total de rounds
         )
 
-        # 4️⃣ Restaurer le statut et l’indice du round déjà joué
-        tour.status = raw["status"]
-        tour.current_round_index = raw["current_round_index"]
+        # 2️⃣ Restaurer le statut du tournoi (non démarré, en cours, terminé)
+        tournament.status = raw["status"]
 
-        # 5️⃣ Charger tous les joueurs depuis la classe Player
-        #    pour pouvoir les retrouver et les associer au tournoi
+        # 3️⃣ Restaurer l'indice du round actuel (combien de rounds ont déjà été joués)
+        tournament.current_round_index = raw["current_round_index"]
+
+        # 4️⃣ Retourner l'objet Tournament partiellement reconstruit
+        return tournament
+
+    # ------- Restauration des joueurs d'un tournoi -------
+    @staticmethod
+    def _restore_players(raw, tournament):
+        """
+        Restaure les joueurs d'un tournoi à partir des données JSON.
+
+        Étapes :
+        1. Recharge tous les joueurs existants depuis players.json.
+        2. Crée une table de correspondance national_id → Player.
+        3. Associe au tournoi les joueurs dont les IDs sont listés dans le JSON.
+
+        Paramètres :
+            raw (dict)   : dictionnaire contenant les données brutes du tournoi
+            tournament (Tournament) : instance du tournoi à compléter avec ses joueurs
+
+        Retournament :
+            dict : table de correspondance {national_id: Player}
+        """
+
+        # 1️⃣ Charger tous les joueurs connus dans Player.registry
+        #    (cela permet de retrouver les instances déjà existantes)
         Player.load_all()
-        #    Player.registry contient maintenant tous les objets Player chargés
-        id_map = {p.national_id: p for p in Player.registry}
-        #    Reconstruire la liste tour.players en se basant sur les IDs
-        tour.players = [id_map[nid] for nid in raw["players"]]
 
-        # 6️⃣ Recréer chaque Round et ses Matchs
+        # 2️⃣ Créer un dictionnaire {ID national → instance Player}
+        #    pour un accès rapide aux objets joueurs via leur identifiant unique
+        id_map = {p.national_id: p for p in Player.registry}
+
+        # 3️⃣ Associer les joueurs listés dans raw["players"] au tournoi
+        #    en utilisant le dictionnaire id_map
+        tournament.players = [id_map[nid] for nid in raw["players"]]
+
+        # 4️⃣ Retourner la table id_map (utile pour la suite de la reconstruction)
+        return id_map
+
+    # ------- Restauration des rounds et des matchs -------
+    @staticmethod
+    def _restore_rounds(raw, tournament, id_map):
+        """
+        Reconstruit les rounds et les matchs d'un tournoi à partir des données JSON.
+
+        Étapes :
+        1. Parcourt la liste `raw["rounds"]` (chaque élément correspond à un round).
+        2. Pour chaque round, recrée les matchs avec les joueurs et leurs scores.
+        3. Restaure les informations temporelles (start_time, end_time).
+        4. Ajoute chaque round reconstruit à l'objet `tour`.
+
+        Paramètres :
+            raw (dict)          : dictionnaire contenant toutes les données brutes du tournoi
+            tournament (Tournament)   : instance de tournoi à compléter avec ses rounds
+            id_map (dict)       : dictionnaire {national_id: Player} pour retrouver les joueurs
+        """
+
+        # 1️⃣ Parcourt tous les rounds contenus dans les données JSON
         for r in raw["rounds"]:
             matches = []
+
+            # 2️⃣ Pour chaque match du round, recrée les joueurs et scores
             for m in r["matches"]:
-                # m est typiquement [(id1, score1), (id2, score2)]
-                p1 = id_map[m[0][0]]  # joueur 1
-                p2 = id_map[m[1][0]]  # joueur 2
-                s1 = m[0][1]  # score du joueur 1
-                s2 = m[1][1]  # score du joueur 2
-                # On crée le Match en passant joueurs et scores
+                # m est une liste de 2 tuples : [(id_j1, score1), (id_j2, score2)]
+                p1 = id_map[m[0][0]]  # Retrouver le joueur 1 par son ID
+                p2 = id_map[m[1][0]]  # Retrouver le joueur 2 par son ID
+                s1 = m[0][1]  # Score du joueur 1
+                s2 = m[1][1]  # Score du joueur 2
+
+                # Création d'un objet Match avec joueurs et scores restaurés
                 matches.append(Match(p1, p2, score1=s1, score2=s2))
 
-            # Créer l’objet Round avec son nom et ses matchs
+            # 3️⃣ Création du Round avec son nom et ses matchs
             rnd = Round(name=r["name"], matches=matches)
-            # Restaurer ses heures de début et de fin (si présentes)
+
+            # 4️⃣ Restauration des horaires (début et fin) s'ils sont présents
             rnd.start_time = r.get("start_time")
             rnd.end_time = r.get("end_time")
-            # Ajouter ce round au tournoi
-            tour.rounds.append(rnd)
 
-        # 7️⃣ Restaurer l’historique des appariements
-        tour.history = raw.get("history", [])
+            # 5️⃣ Ajout du round reconstruit à la liste des rounds du tournoi
+            tournament.rounds.append(rnd)
 
-        # 8️⃣ Recalculer les points des joueurs pour obtenir un classement à jour
-        tour._recalculate_points()
+    # ------- Restauration de l’historique et recalcul des points -------
+    @staticmethod
+    def _restore_history_and_points(raw, tournament):
+        """
+        Restaure l'historique des appariements et recalcule les points du tournoi.
 
-        # 9️⃣ Retourner l’objet Tournament reconstitué
-        return tour
+        Étapes :
+        1. Récupère la clé "history" depuis les données brutes (liste des matchs déjà joués).
+        2. Réassigne cette liste dans l'attribut `tournament.history`.
+        3. Lance le recalcul des points de tous les joueurs inscrits via `recalculate_points()`.
+
+        Paramètres :
+            raw (dict)        : dictionnaire des données brutes du tournoi
+            tournament (Tournament) : instance du tournoi à mettre à jour
+        """
+
+        # 1️⃣ Restaure la liste des appariements déjà effectués
+        tournament.history = raw.get("history", [])
+
+        # 2️⃣ Recalcule les points en fonction des scores enregistrés
+        tournament.recalculate_points()
 
     # -----------------------
     #   RECALCUL DES POINTS
     # -----------------------
 
-    def _recalculate_points(self):
+    def recalculate_points(self):
         """
-        Remet à zéro les points, puis recompte
-        d'après tous les scores chargés.
+        Recalcule les points des joueurs en fonction de tous les matchs joués.
+
+        Étapes :
+        1. Remet à zéro les points de tous les joueurs inscrits au tournoi.
+        2. Parcourt chaque round et chaque match pour additionner les scores.
+        3. Met à jour les points cumulés dans chaque objet Player.
         """
-        # 1️⃣ Remise à zéro des points de chaque joueur
-        #    On parcourt la liste des joueurs inscrits et on met leurs points à 0.0
+
+        # 1️⃣ Réinitialise les points de tous les joueurs à 0.0
         for p in self.players:
             p.points = 0.0
 
-        # 2️⃣ Recalcul des points à partir des scores de chaque match
-        #    Pour chaque round déjà joué…
+        # 2️⃣ Pour chaque round déjà enregistré dans le tournoi
         for rnd in self.rounds:
-            # …et pour chaque match de ce round…
+            # 3️⃣ Pour chaque match joué dans ce round
             for m in rnd.matches:
-                # On récupère les scores stockés dans le Match
+                # Récupère les scores des deux joueurs
                 s1, s2 = m.scores
-                # On ajoute ces scores aux points des deux joueurs
+
+                # Ajoute les points aux joueurs correspondants
                 m.players[0].points += s1
                 m.players[1].points += s2
-
-        # (Optionnel) Affichage pour vérifier
-        # print("✔️ Points recalculés avec succès !")

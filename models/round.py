@@ -10,22 +10,40 @@ from datetime import datetime
 
 
 class Round:
-    """Représente un round d'un tournoi d'échecs."""
+    """
+    Représente un round (manche) d'un tournoi d'échecs.
 
+    Rôle :
+      - Contient la liste des matchs (Match) joués dans ce round
+      - Enregistre le moment du début et, plus tard, de la fin du round
+      - Permet de regrouper les matchs par manche dans un tournoi
+    """
+
+    # ------- Initialisation d'un nouvel objet Round -------
     def __init__(self, name, matches=None):
-        # 1️⃣ Nom du round (ex. "Round 1")
+        """
+        Initialise un round.
+
+        Paramètres :
+          - name    : Nom du round (exemple : "Round 1")
+          - matches : Liste d'objets Match, ou None pour démarrer avec une liste vide
+        """
+
+        # 1️⃣ Enregistre le nom du round
         self.name = name
 
-        # 2️⃣ Liste des objets Match :
-        #    si matches fourni, on l’utilise, sinon on crée une liste vide
+        # 2️⃣ Initialise la liste des matchs
+        #    - Si une liste est fournie, on l'utilise
+        #    - Sinon on crée une nouvelle liste vide
         self.matches = matches if matches is not None else []
 
-        # 3️⃣ Heure de démarrage du round :
-        #    on enregistre l’instant courant au format ISO (YYYY‑MM‑DDTHH:MM:SS)
+        # 3️⃣ Note l'heure de début du round
+        #    - datetime.now().isoformat(timespec="seconds") produit une chaîne
+        #      au format ISO (ex. 2025-07-25T14:32:10)
         self.start_time = datetime.now().isoformat(timespec="seconds")
 
-        # 4️⃣ Heure de fin / clôture :
-        #    à None tant que le round n'est pas fermé via close()
+        # 4️⃣ Initialise l'heure de fin du round à None
+        #    - Elle sera définie plus tard quand le round sera clôturé
         self.end_time = None
 
     # -----------------------
@@ -33,7 +51,13 @@ class Round:
     # -----------------------
 
     def close(self):
-        """Marque le round comme terminé en enregistrant l'heure de fin."""
-        # 5️⃣ Quand on appelle close(), on met à jour end_time
-        #    pour dire “round terminé” à cet instant précis
+        """
+        Termine le round en enregistrant l'heure de fin.
+
+        Explications :
+        - Cette méthode doit être appelée quand tous les matchs du round sont joués.
+        - Elle fixe l'attribut `end_time` avec l'heure courante,
+            ce qui permet de marquer le round comme terminé.
+        """
+        # 5️⃣ On fixe end_time avec la date et l'heure actuelles au format ISO (lisible)
         self.end_time = datetime.now().isoformat(timespec="seconds")
