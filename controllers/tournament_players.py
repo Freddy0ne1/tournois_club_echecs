@@ -77,6 +77,10 @@ class TournamentController(BaseTournamentController):
         print("2. Retirer joueur(s)")
         print("0. Retour\n")
 
+    # -----------------------
+    #   AJOUTER JOUEUR(S)
+    # -----------------------
+
     # ------- Ajoute des joueurs sélectionnés dans un tournoi -------
     def _add_players(self, tournament):
         """
@@ -97,20 +101,33 @@ class TournamentController(BaseTournamentController):
             return
 
         # 4️⃣ Affiche la liste des joueurs disponibles avec un numéro
+        self._display_available_players(available)
+
+        # 5️⃣ Invite l'utilisateur à choisir les joueurs à ajouter (séparés par des virgules)
+        nums = input("\nNuméros à ajouter (séparés par des virgules) : ")
+
+        # 6️⃣ Traite la saisie et récupère les joueurs ajoutés
+        added = self._process_selected_players(nums, available, tournament)
+
+        # 8️⃣ Finalisation après ajout
+        self._finalize_added_players(added, tournament)
+
+    # ------- Affichage de la liste des joueurs disponibles pour ajout -------
+    def _display_available_players(self, available):
+        """Affiche la liste numérotée des joueurs disponibles à l'ajout."""
         print("\n--- Joueurs disponibles à l'ajout ---")
         for i, p in enumerate(available, 1):
             print(
                 f"{i}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
             )
 
-        # 5️⃣ Invite l'utilisateur à choisir les joueurs à ajouter (séparés par des virgules)
-        nums = input("\nNuméros à ajouter (séparés par des virgules) : ")
-
-        # 6️⃣ Prépare des structures pour éviter doublons et mémoriser les ajouts
+    # ------- Traitement de la saisie des joueurs sélectionnés et ajout au tournoi -------
+    def _process_selected_players(self, nums, available, tournament):
+        """Analyse la saisie de l'utilisateur et ajoute les joueurs au tournoi."""
         added = []  # Liste des joueurs ajoutés
         seen = set()  # Ensemble pour éviter les doublons de saisie
 
-        # 7️⃣ Traite chaque numéro saisi
+        # Traite chaque numéro saisi
         for token in nums.split(","):
             token = token.strip()
 
@@ -133,7 +150,11 @@ class TournamentController(BaseTournamentController):
             else:
                 print(f"⚠️  Le numéro {token} n'est pas valide.")
 
-        # 8️⃣ Si des joueurs ont été ajoutés
+        return added
+
+    # ------- Finalisation après ajout des joueurs (tri, sauvegarde et affichage) -------
+    def _finalize_added_players(self, added, tournament):
+        """Trie, sauvegarde et affiche le résultat final de l'ajout des joueurs."""
         if added:
             # 🅰 Trie la liste des joueurs inscrits après l'ajout
             tournament.players.sort(key=lambda p: (p.last_name, p.first_name))
@@ -148,6 +169,10 @@ class TournamentController(BaseTournamentController):
         else:
             # 9️⃣ Si aucun ajout n'a eu lieu
             print("\n👤 Aucun nouveau joueur ajouté.")
+
+    # -----------------------
+    #   RETIRER JOUEUR(S)
+    # -----------------------
 
     # ------- Retire un ou plusieurs joueurs sélectionnés d’un tournoi -------
     def _remove_players(self, tournament):
@@ -164,59 +189,65 @@ class TournamentController(BaseTournamentController):
             print("\n👤 Aucun joueur inscrit.")
             return
 
-        # 2️⃣ Trie les joueurs inscrits par NOM puis prénom
-        tournament.players.sort(key=lambda p: (p.last_name, p.first_name))
+        # 2️⃣ Trie et affiche les joueurs inscrits
+        self._display_registered_players(tournament)
 
-        # 3️⃣ Affiche la liste numérotée des joueurs inscrits
+        # 3️⃣ Demande la liste des joueurs à retirer
+        to_remove = self._ask_players_to_remove(tournament)
+        if not to_remove:
+            print("\n❌ Aucun numéro valide.")
+            return
+
+        # 4️⃣ Confirmation et suppression
+        removed = self._confirm_and_remove_players(tournament, to_remove)
+
+        # 5️⃣ Finalisation (sauvegarde et affichage)
+        self._finalize_player_removal(tournament, removed)
+
+    # ------- Affichage des joueurs inscrits dans un tournoi -------
+    def _display_registered_players(self, tournament):
+        """Trie et affiche la liste numérotée des joueurs inscrits au tournoi."""
+        tournament.players.sort(key=lambda p: (p.last_name, p.first_name))
         print("\n--- Joueurs inscrits ---")
         for i, p in enumerate(tournament.players, 1):
             print(
                 f"{i}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
             )
 
-        # 4️⃣ Invite l'utilisateur à entrer les numéros des joueurs à retirer
+    # ------- Sélection des joueurs à retirer d’un tournoi -------
+    def _ask_players_to_remove(self, tournament):
+        """Demande à l'utilisateur quels joueurs retirer et retourne une liste d'objets joueurs."""
         nums = input("\nNuméros à retirer (séparés par des virgules) : ")
-
-        # 5️⃣ Prépare une liste des joueurs à retirer
         to_remove = []
         for token in nums.split(","):
             token = token.strip()
-
-            # 🅰 Ignore les valeurs non numériques
             if not token.isdigit():
                 continue
-
-            # 🅱 Vérifie que l'indice est valide
             idx = int(token) - 1
             if 0 <= idx < len(tournament.players):
                 to_remove.append(tournament.players[idx])
+        return to_remove
 
-        # 6️⃣ Si aucun numéro valide n'a été fourni
-        if not to_remove:
-            print("\n❌ Aucun numéro valide.")
-            return
-
-        # 7️⃣ Demande confirmation avant suppression pour chaque joueur sélectionné
+    # ------- Confirmation et suppression des joueurs sélectionnés -------
+    def _confirm_and_remove_players(self, tournament, to_remove):
+        """Demande confirmation et supprime les joueurs sélectionnés du tournoi."""
         removed = []
         for p in to_remove:
             if input(f"Supprimer {p.last_name} {p.first_name} (o/N) ? ").lower() == "o":
                 tournament.players.remove(p)
                 removed.append(p)
+        return removed
 
-        # 8️⃣ Si au moins un joueur a été retiré
+    # ------- Finalisation après suppression des joueurs -------
+    def _finalize_player_removal(self, tournament, removed):
+        """Trie, sauvegarde et affiche le résultat final après suppression."""
         if removed:
-            # 🅰 Trie les joueurs restants
             tournament.players.sort(key=lambda p: (p.last_name, p.first_name))
-
-            # 🅱 Sauvegarde le tournoi mis à jour
             self._save(tournament)
-
-            # 🅲 Affiche la liste des joueurs retirés
             print("\n👤 Joueur(s) retiré(s) :")
             for p in removed:
                 print(f"- {p.last_name} {p.first_name} [{p.national_id}]")
         else:
-            # 9️⃣ Si aucune suppression confirmée
             print("\n👤 Aucune suppression effectuée.")
 
     # ------- Liste des joueurs disponibles (non inscrits) pour un tournoi -------

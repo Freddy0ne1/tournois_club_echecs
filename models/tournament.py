@@ -300,6 +300,7 @@ class Tournament:
     #   SAUVEGARDE DU TOURNOI
     # -----------------------
 
+    # ------- Sauvegarde d'un tournoi dans un fichier JSON -------
     def save(self):
         """
         Sauvegarde l'état actuel du tournoi dans un fichier JSON.
@@ -309,10 +310,6 @@ class Tournament:
         2. Prépare un dictionnaire Python représentant toutes les informations
         importantes du tournoi (joueurs, rounds, historique, etc.).
         3. Écrit ce dictionnaire dans un fichier JSON (lisible et encodé en UTF-8).
-
-        Remarque :
-        - Les joueurs sont enregistrés uniquement par leur identifiant national.
-        - Chaque round et match est converti dans un format simple (serialize).
         """
 
         # 1️⃣ Création (si nécessaire) du dossier de stockage
@@ -320,9 +317,23 @@ class Tournament:
         #    - exist_ok=True : ne lève pas d'erreur si le dossier existe déjà
         DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-        # 2️⃣ Construction d'une structure de données simple (dictionnaire)
-        #    qui décrit complètement l'état du tournoi
-        data = {
+        # 2️⃣ Préparation des données
+        data = self._build_tournament_data()
+
+        # 3️⃣ Écriture dans le fichier
+        self._write_tournament_file(data)
+
+    # ------- Construction du dictionnaire de données du tournoi -------
+    def _build_tournament_data(self):
+        """
+        Construit un dictionnaire Python représentant complètement l'état du tournoi.
+
+        - Les joueurs sont enregistrés uniquement par leur identifiant national.
+        - Chaque round et match est converti en structure simple (serialize).
+        """
+
+        # 1️⃣ Construction de la structure de données
+        return {
             "name": self.name,
             "place": self.place,
             "start_date": self.start_date,
@@ -331,13 +342,9 @@ class Tournament:
             "total_rounds": self.total_rounds,
             "status": self.status,
             "current_round_index": self.current_round_index,
-            # On ne sauvegarde que les IDs des joueurs pour éviter
-            # d'écrire des objets Player complets dans le JSON
+            # On ne sauvegarde que les IDs des joueurs
             "players": [p.national_id for p in self.players],
-            # Chaque round est converti en dictionnaire avec :
-            # - son nom
-            # - ses matchs (convertis via serialize)
-            # - ses dates de début et fin
+            # Conversion des rounds en dictionnaires simples
             "rounds": [
                 {
                     "name": rnd.name,
@@ -351,10 +358,14 @@ class Tournament:
             "history": self.history,
         }
 
-        # 3️⃣ Écriture dans un fichier JSON
-        #    - self._file_path() donne le chemin complet du fichier
-        #    - indent=4 : rend le fichier lisible
-        #    - ensure_ascii=False : garde les caractères accentués
+    # ------- Écriture des données du tournoi dans un fichier JSON -------
+    def _write_tournament_file(self, data):
+        """
+        Écrit les données d'un tournoi dans un fichier JSON lisible.
+
+        - indent=4 pour rendre lisible
+        - ensure_ascii=False pour conserver les accents
+        """
         with open(self._file_path(), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
