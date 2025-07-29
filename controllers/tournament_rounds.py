@@ -1,15 +1,195 @@
 """
-Module tournament_scores
-Gère la saisie des scores pour le round en cours d'un tournoi.
+Contrôleur des rounds et de la saisie des scores.
+
+Ce module gère toutes les étapes liées au déroulement d'un tournoi :
+- Démarrage d'un tournoi (initialisation et génération du premier round)
+- Passage au round suivant
+- Affichage des appariements et résultats
+- Saisie et enregistrement des scores
+
+Il repose sur TournamentRoundController (hérité de TournamentControllerBase)
+pour la gestion des tournois et la persistance des données.
 """
 
-from .tournament_controller_base import TournamentController as BaseTournamentController
+from .tournament_controller_base import (
+    TournamentControllerBase as TournamentRoundController,
+)
 
 
-class TournamentController(BaseTournamentController):
+class TournamentRound(TournamentRoundController):
     """
-    Sous-contrôleur pour la saisie et l'enregistrement des scores.
+    Contrôleur pour la gestion du déroulement des rounds.
+
+    Responsabilités :
+    - Démarrer un tournoi (vérification des conditions et génération du premier round)
+    - Lancer le round suivant après clôture du précédent
+    - Afficher les appariements des joueurs pour chaque round
+    - Saisir et enregistrer les scores des matchs
+    - Afficher les résultats et récapitulatifs
+
+    Cette classe s'appuie sur TournamentRoundController pour :
+    - Les outils de sélection de tournoi (_choose)
+    - La sauvegarde de l'état des tournois (_save)
     """
+
+    # -----------------------
+    #   DEMARRAGE TOURNOI
+    # -----------------------
+
+    # ------- Démarrage d’un tournoi et création du premier round -------
+    def start_tournament(self):
+        """
+        Démarre un tournoi si toutes les conditions sont réunies :
+        1. Choisit le tournoi
+        2. Vérifie les conditions (au moins 2 joueurs, nombre pair, etc.)
+        3. Lance le tournoi (changement de statut et création du premier round)
+        4. Affiche les matchs du premier round
+        """
+        # 1️⃣ Affiche un titre pour signaler l'action
+        print("\n--- Démarrage d'un tournoi ---")
+
+        # 2️⃣ Sélection du tournoi à démarrer
+        tournament = self._choose("démarrer")
+        if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
+            return
+
+        # 3️⃣ Vérifie si le tournoi peut être démarré (via méthode dédiée)
+        if not self._can_start_tournament(tournament):
+            return
+
+        # 4️⃣ Lance le tournoi et crée le premier round
+        self._launch_tournament(tournament)
+
+        # 5️⃣ Affiche les appariements (matchs) du round en cours
+        self._display_rounds(tournament)
+
+        # 6️⃣ Indique à l'utilisateur comment saisir les scores
+        print(
+            "\n💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores du round."
+        )
+
+    # ------- Vérification des conditions avant de démarrer un tournoi -------
+    def _can_start_tournament(self, tournament):
+        """
+        Vérifie toutes les conditions avant de démarrer un tournoi :
+        - Il doit y avoir des joueurs inscrits
+        - Leur nombre doit être pair et ≥ 2
+        - Le tournoi ne doit pas être déjà terminé ou en cours
+        Retourne True si toutes les conditions sont réunies, sinon False.
+        """
+        # 1️⃣ Vérifie qu'il y a au moins un joueur inscrit
+        if not tournament.players:
+            print("\n❌ Impossible : aucun joueur n'est inscrit.")
+            return False
+
+        # 2️⃣ Vérifie que le nombre de joueurs est pair et au moins 2
+        count = len(tournament.players)
+        if count < 2 or count % 2 != 0:
+            print("\n❌ Il faut un nombre pair de joueurs (au moins 2).")
+            return False
+
+        # 3️⃣ Vérifie que le tournoi n'est pas déjà terminé
+        if tournament.status == "terminé":
+            print(f"❌ Impossible : le tournoi '{tournament.name}' est déjà terminé.")
+            return False
+
+        # 4️⃣ Vérifie que le tournoi n'est pas déjà en cours
+        if tournament.status == "en cours":
+            print(f"\nℹ️  Statut du tournoi '{tournament.name}' : {tournament.status}.")
+            print(
+                "💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores du round."
+            )
+            return False
+
+        # 5️⃣ Si toutes les conditions sont réunies, retourne True
+        return True
+
+    # ------- Lancer un tournoi : statut, premier round et sauvegarde -------
+    def _launch_tournament(self, tournament):
+        """
+        Lance le tournoi :
+        - Passe son statut à "en cours"
+        - Crée le premier round avec les appariements
+        - Sauvegarde l'état mis à jour
+        """
+        # 1️⃣ Affiche un message de confirmation de démarrage
+        count = len(tournament.players)
+        print(f"\n🏁 Tournoi '{tournament.name}' démarré.\n")
+        print(f"Joueurs inscrits : {count}")
+        print(f"Nombre de rounds : {tournament.total_rounds}\n")
+
+        # 2️⃣ Met à jour le statut du tournoi
+        tournament.status = "en cours"
+
+        # 3️⃣ Crée le premier round et génère les appariements
+        tournament.start_next_round()
+
+        # 4️⃣ Sauvegarde l'état du tournoi après démarrage
+        self._save(tournament)
+
+    # ------- Afficher les rounds et leurs matchs d'un tournoi -------
+    def _display_rounds(self, tournament):
+        """
+        Affiche les appariements (matchs) de tous les rounds du tournoi.
+        Pour chaque round :
+        - Affiche son numéro
+        - Liste les matchs sous la forme :
+            Joueur1 [ID] VS Joueur2 [ID]
+        """
+        # 1️⃣ Parcourt tous les rounds du tournoi avec leur index
+        for idx, rnd in enumerate(tournament.rounds, 1):
+            # 🅰 Affiche le numéro du round
+            print(f"\n🥊 Round {idx} :")
+
+            # 🅱 Affiche chaque match avec les deux joueurs
+            for m in rnd.matches:
+                p1, p2 = m.players
+                print(
+                    f"{p1.last_name} {p1.first_name} [{p1.national_id}] VS "
+                    f"{p2.last_name} {p2.first_name} [{p2.national_id}]"
+                )
+
+    # -----------------------
+    #   ROUND SUIVANT
+    # -----------------------
+
+    def start_next_round(self):
+        """
+        Démarre le round suivant du tournoi sélectionné.
+        Étapes :
+        1. Sélection du tournoi
+        2. Vérifie que le tournoi n'est pas terminé
+        3. Vérifie que le round précédent est bien clôturé
+        4. Vérifie que le nombre maximum de rounds n'est pas dépassé
+        5. Lance le round suivant et sauvegarde l'état du tournoi
+        """
+        # 1️⃣ Affiche le titre pour indiquer l'action en cours
+        print("\n--- Démarrage du round suivant ---")
+
+        # 2️⃣ Permet à l'utilisateur de choisir le tournoi
+        tournament = self._choose("démarrer le round suivant")
+        if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
+            return
+
+        # 3️⃣ Empêche de lancer un round si le tournoi est déjà terminé
+        if tournament.status == "terminé":
+            print(f"❌ Impossible : le tournoi '{tournament.name}' est déjà terminé.")
+            return
+
+        # 4️⃣ Vérifie que le dernier round est bien clôturé avant d'en lancer un nouveau
+        if tournament.rounds and not tournament.rounds[-1].end_time:
+            print("⚠️  Il faut clôturer le round en cours avant de démarrer le suivant.")
+            return
+
+        # 5️⃣ Vérifie que le nombre maximum de rounds n'est pas déjà atteint
+        if tournament.current_round_index >= tournament.total_rounds:
+            print("ℹ️  Tous les rounds ont déjà été joués.")
+            return
+
+        # 6️⃣ Lance le nouveau round et sauvegarde l'état du tournoi
+        tournament.start_next_round()
+        self._save(tournament)
+        print("🏁 Nouveau round démarré.")
 
     # -----------------------
     #   SAISIE SCORES

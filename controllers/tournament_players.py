@@ -1,13 +1,23 @@
 """
-Module tournament_players
-Gère l'ajout et la suppression de joueurs dans un tournoi.
+Contrôleur pour la gestion des joueurs dans un tournoi.
+
+Ce module permet :
+- L'ajout de joueurs dans un tournoi sélectionné
+- Le retrait de joueurs d'un tournoi
+- L'affichage de la liste des joueurs inscrits
+
+Il s'appuie sur TournamentControllerBase pour :
+- Sélectionner un tournoi (_choose)
+- Sauvegarder l'état du tournoi (_save)
 """
 
 from models.player import Player
-from .tournament_controller_base import TournamentController as BaseTournamentController
+from .tournament_controller_base import (
+    TournamentControllerBase as TournamentPlayersController,
+)
 
 
-class TournamentController(BaseTournamentController):
+class TournamentPlayers(TournamentPlayersController):
     """
     Sous-contrôleur pour gérer l'ajout et le retrait de joueurs dans un tournoi.
     """

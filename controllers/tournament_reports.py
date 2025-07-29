@@ -6,14 +6,13 @@ Affiche les classements, rapports et propose l'export des données.
 import csv
 from models.player import Player
 from views.console_view import ConsoleView
-from .tournament_utils import TournamentController as UtilsController
 from .tournament_controller_base import (
-    TournamentController as BaseTournamentController,
+    TournamentControllerBase as TournamentReportsController,
     EXPORT_DIR,
 )
 
 
-class TournamentController(BaseTournamentController):
+class TournamentReports(TournamentReportsController):
     """
     Sous-contrôleur pour l'affichage des rapports et classements,
     et la génération d'exports CSV/HTML.
@@ -36,7 +35,7 @@ class TournamentController(BaseTournamentController):
         #    les informations les plus récentes et que Player.registry
         #    est correctement synchronisé (remappage national_id → Player)
         # self.reload_tournaments()
-        UtilsController.reload_tournaments(self)
+        TournamentReportsController.reload_tournaments(self)
 
         # 2️⃣ Affiche un titre et invite l'utilisateur à choisir un tournoi
         print("\n--- Affichage du classement ---")

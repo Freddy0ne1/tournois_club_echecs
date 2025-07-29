@@ -11,7 +11,7 @@ from models.player import Player
 #   LIMITE DE TENTATIVES
 # -----------------------
 
-# 1️⃣ Nombre maximal de tentatives autorisées pour une saisie obligatoire
+# 1️⃣ Nombre maximal de tentatives autorisées pour une saisie obligatoires
 MAX_ATTEMPTS = 3
 
 # -----------------------

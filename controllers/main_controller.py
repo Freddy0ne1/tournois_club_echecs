@@ -2,9 +2,15 @@
 Contrôleur principal pour démarrer l'application.
 """
 
-from controllers.player_controller import PlayerController
-from controllers.tournament_controller_main import TournamentController
 from models.player import Player
+
+from controllers.tournament_management import TournamentManagement
+from controllers.tournament_players import TournamentPlayers
+from controllers.player_controller import PlayerController
+from controllers.tournament_reports import TournamentReports
+from controllers.tournament_rounds import TournamentRound
+from views.console_view import ConsoleView
+from .tournament_controller_base import TournamentControllerBase
 
 
 class MainController:
@@ -28,7 +34,12 @@ class MainController:
         self.player_ctrl = PlayerController()
 
         # 2️⃣ Crée le contrôleur dédié aux tournois
-        self.tour_ctrl = TournamentController()
+        self.tour_ctrl = TournamentManagement()
+        self.tour_ctrl2 = TournamentReports()
+        self.tour_ctrl3 = TournamentPlayers()
+        self.tour_ctrl4 = TournamentRound()
+        self.tour_ctrl5 = ConsoleView()
+        self.tour_ctrl_base = TournamentControllerBase()
 
         # 3️⃣ Recharge les joueurs sauvegardés précédemment
         Player.load_all()
@@ -136,7 +147,7 @@ class MainController:
             updated = self.player_ctrl.modify_player()
             if updated:
                 # Si un joueur est modifié, on met à jour toutes ses occurrences dans les tournois
-                self.tour_ctrl.update_player_references(updated)
+                self.tour_ctrl_base.update_player_references(updated)
 
         # 2️⃣ Dictionnaire des actions associées aux numéros de menu
         actions = {
@@ -191,11 +202,11 @@ class MainController:
             2: self.tour_ctrl.modify_tournament,
             3: self.tour_ctrl.delete_tournament,
             4: self.tour_ctrl.list_tournaments,
-            5: self.tour_ctrl.manage_players_in_tournament,
-            6: self.tour_ctrl.start_tournament,
-            7: self.tour_ctrl.enter_scores_current_round,
-            8: self.tour_ctrl.start_next_round,
-            9: self.tour_ctrl.show_leaderboard,
+            5: self.tour_ctrl3.manage_players_in_tournament,
+            6: self.tour_ctrl4.start_tournament,
+            7: self.tour_ctrl4.enter_scores_current_round,
+            8: self.tour_ctrl4.start_next_round,
+            9: self.tour_ctrl5.show_leaderboard,
         }
 
         # 2️⃣ Liste des options affichées dans le menu tournois
@@ -242,11 +253,11 @@ class MainController:
         """
         # 1️⃣ Dictionnaire des actions disponibles pour chaque option du menu Rapports
         actions = {
-            1: self.tour_ctrl.list_registered_players,
+            1: self.tour_ctrl2.list_registered_players,
             2: self.tour_ctrl.list_tournaments,
-            3: self.tour_ctrl.show_tournament_header,
-            4: self.tour_ctrl.show_tournament_players,
-            5: self.tour_ctrl.show_all_rounds_and_matches,
+            3: self.tour_ctrl2.show_tournament_header,
+            4: self.tour_ctrl2.show_tournament_players,
+            5: self.tour_ctrl2.show_all_rounds_and_matches,
         }
 
         # 2️⃣ Liste des options affichées dans le menu Rapports
