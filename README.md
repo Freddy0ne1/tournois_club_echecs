@@ -130,8 +130,6 @@ flake8 --format=html --htmldir=flake8-report
 
 Ensuite, ouvre `flake8-report/index.html` dans un navigateur.
 
-```
-
 ---
 
 ## ✨ Qualité du code
@@ -142,4 +140,7 @@ Exécute régulièrement Flake8 pour garder le projet propre.
 ---
 
 Bonne gestion de vos tournois ! ♟🚀
+
+```
+
 ```
