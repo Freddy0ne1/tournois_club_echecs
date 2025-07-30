@@ -130,29 +130,16 @@ flake8 --format=html --htmldir=flake8-report
 
 Ensuite, ouvre `flake8-report/index.html` dans un navigateur.
 
-![Exemple rapport Flake8](https://user-images.githubusercontent.com/your-screenshot.png)
-
-### 4. Générer et ouvrir le rapport en une commande
-
-#### **Linux / Mac**
-
-```bash
-rm -rf flake8-report && flake8 --format=html --htmldir=flake8-report && xdg-open flake8-report/index.html
-```
-
-#### **Windows (PowerShell)**
-
-```powershell
-Remove-Item -Recurse -Force flake8-report; flake8 --format=html --htmldir=flake8-report; start flake8-report\index.html
 ```
 
 ---
 
 ## ✨ Qualité du code
 
-Le fichier `.flake8` fixe les règles (max-line-length : 119) pour assurer une cohérence.  
+Le fichier `.flake8` fixe les règles (max-line-length : 119) pour assurer une cohérence.
 Exécute régulièrement Flake8 pour garder le projet propre.
 
 ---
 
 Bonne gestion de vos tournois ! ♟🚀
+```
