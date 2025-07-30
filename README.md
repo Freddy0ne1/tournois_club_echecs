@@ -140,7 +140,3 @@ Exécute régulièrement Flake8 pour garder le projet propre.
 ---
 
 Bonne gestion de vos tournois ! ♟🚀
-
-```
-
-```
