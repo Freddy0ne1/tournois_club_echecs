@@ -68,35 +68,32 @@ class TournamentReports(TournamentReportsController):
         7. Prépare les données pour un éventuel export
         8. Propose l'export des données (CSV, JSON, etc.)
         """
-        # 1️⃣ Affiche l'en-tête
-        print("\n--- Joueurs inscrits à un tournoi ---")
-
-        # 2️⃣ Collecte des identifiants uniques des joueurs inscrits
+        # 1️⃣ Collecte des identifiants uniques des joueurs inscrits
         ids = set()
         for t in self._tournaments:
             for p in t.players:
                 ids.add(p.national_id)
 
-        # 3️⃣ Si aucun joueur n'est inscrit à aucun tournoi
+        # 2️⃣ Si aucun joueur n'est inscrit à aucun tournoi
         if not ids:
             print("\nAucun joueur inscrit à un tournoi.\n")
             return
 
-        # 4️⃣ Construit une liste des joueurs correspondant aux IDs collectés
+        # 3️⃣ Construit une liste des joueurs correspondant aux IDs collectés
         registered = [p for p in Player.registry if p.national_id in ids]
 
-        # 5️⃣ Trie les joueurs par nom puis par prénom
+        # 4️⃣ Trie les joueurs par nom puis par prénom
         registered.sort(key=lambda p: (p.last_name, p.first_name))
 
-        # 6️⃣ Affiche la liste via la vue console
+        # 5️⃣ Affiche la liste via la vue console
         print("\n--- Joueurs inscrits à un tournoi ---")
         ConsoleView.show_players(registered)
 
-        # 7️⃣ Prépare les données pour un export éventuel
+        # 6️⃣ Prépare les données pour un export éventuel
         rows = [[p.last_name, p.first_name, p.national_id] for p in registered]
         headers = ["Nom", "Prénom", "ID"]
 
-        # 8️⃣ Demande à l'utilisateur s'il souhaite exporter les données
+        # 7️⃣ Demande à l'utilisateur s'il souhaite exporter les données
         self._ask_export(rows, headers, "joueurs_inscrits")
 
     # ------- Sélection d’un tournoi via la méthode _choose -------
@@ -131,9 +128,16 @@ class TournamentReports(TournamentReportsController):
 
         # 3️⃣ Si un tournoi est bien sélectionné, affiche son nom et ses dates
         if tournament:
+            print("\n--- Détails du tournoi sélectionné ---")
+            # 🅰 Affiche le nom du tournoi
+            print(f"\nNom               : {tournament.name}")
+            print(f"Lieu              : {tournament.place}")
             print(
-                f"\n{tournament.name} — {tournament.start_date} → {tournament.end_date}\n"
+                f"Dates             : {tournament.start_date} → {tournament.end_date}"
             )
+            print(f"Description       : {tournament.description}")
+            print(f"Nombre de rounds  : {tournament.total_rounds}")
+            print(f"Statut            : {tournament.status}\n")
 
     # ------- Affichage des joueurs d’un tournoi sélectionné -------
     def show_tournament_players(self):

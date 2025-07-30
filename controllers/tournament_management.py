@@ -201,10 +201,7 @@ class TournamentManagement(TournamentManagementController):
 
     def list_tournaments(self):
         """Affiche la liste des tournois."""
-        # 1️⃣ Affichage de l'en‑tête pour démarquer la section
-        print("\n--- Liste des tournois ---")
-
-        # 2️⃣ Délégation de l'affichage détaillé à ConsoleView
+        # 1️⃣ Délégation de l'affichage détaillé à ConsoleView
         #    Cette méthode va lister chaque tournoi avec ses infos clés
         ConsoleView.show_tournaments(self._tournaments)
 

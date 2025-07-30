@@ -535,25 +535,22 @@ class PlayerController:
         """
         Affiche la liste de tous les joueurs enregistrés, triés par nom puis prénom.
         Étapes :
-        1. Affiche un en-tête clair
-        2. Récupère les joueurs triés par nom et prénom
-        3. Vérifie si la liste est vide
-        4. Affiche les joueurs via ConsoleView
-        5. Ajoute une ligne vide pour une meilleure lisibilité
+        1. Récupère les joueurs triés par nom et prénom
+        2. Vérifie si la liste est vide
+        3. Affiche les joueurs via ConsoleView
+        4. Ajoute une ligne vide pour une meilleure lisibilité
         """
-        # 1️⃣ Affiche un titre clair pour la liste des joueurs
-        print("\n--- Liste des joueurs ---\n")
 
-        # 2️⃣ Récupère la liste triée de tous les joueurs
+        # 1️⃣ Récupère la liste triée de tous les joueurs
         players = self._get_sorted_players()
 
-        # 3️⃣ Si aucun joueur n'est enregistré, affiche un message et sort
+        # 2️⃣ Si aucun joueur n'est enregistré, affiche un message et sort
         if not players:
             print("Aucun joueur trouvé.\n")
             return
 
-        # 4️⃣ Affiche la liste des joueurs avec numérotation et détails
+        # 3️⃣ Affiche la liste des joueurs avec numérotation et détails
         ConsoleView.show_players(players)
 
-        # 5️⃣ Ajoute un saut de ligne final pour l'aération
+        # 4️⃣ Ajoute un saut de ligne final pour l'aération
         print()

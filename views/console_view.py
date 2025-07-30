@@ -1,13 +1,26 @@
 """
-Module console_view
--------------------
-Ce module contient la classe ConsoleView qui affiche les menus et
-les données des tournois dans la console.
+views/console_view.py
+Vue console pour l'application Tournois Club Échecs.
+
+Ce module gère exclusivement l'affichage dans le terminal :
+- Menus interactifs
+- Listes des joueurs et des tournois
+- Classements et rounds
+Aucune logique métier ni traitement des données n'est effectuée ici.
 """
 
 
 class ConsoleView:
-    """Affiche les menus et les données du tournoi dans la console."""
+    """
+    Vue console de l'application.
+
+    Rôle :
+      - Afficher les informations à l'écran (menus, listes, classements)
+      - Proposer des choix interactifs à l'utilisateur
+    Contraintes :
+      - Ne contient aucune logique métier
+      - Ne modifie pas les données, se contente de présenter les résultats
+    """
 
     # -----------------------
     #   AFFICHAGE DU MENU
@@ -64,7 +77,7 @@ class ConsoleView:
             numéro. NOM Prénom | Identifiant | Date de naissance
         """
         # 1️⃣ Affiche un titre clair avant la liste
-        print("\n--- Liste des joueurs ---")
+        print("\n--- Liste des joueurs ---\n")
 
         # 2️⃣ Trie la liste reçue par ordre alphabétique
         #    - d'abord par le nom (last_name)
@@ -94,7 +107,7 @@ class ConsoleView:
             numéro. Nom - Lieu - Date début → Date fin - Nb tours - Nb joueurs - Statut
         """
         # 1️⃣ Affiche un titre clair avant la liste
-        print("\n--- Liste des tournois ---")
+        print("\n--- Liste des tournois ---\n")
 
         # 2️⃣ Parcourt la liste des tournois et affiche les informations clés pour chacun
         for idx, t in enumerate(tournaments, 1):
