@@ -51,16 +51,27 @@ tournois_club_echecs/
 
    ```bash
    git clone https://github.com/Freddy0ne1/tournois_club_echecs
-   cd tournois_club_echecs
    ```
 
 2. **Créer et activer un environnement virtuel (recommandé)**
 
+   ##### Code pour Windows
+
    ```bash
    python -m venv env
-   # Windows
-   env\Scripts\activate
-   # Linux/Mac
+   ```
+
+   ```bash
+   source env/Scripts/activate
+   ```
+
+   ##### Code pour Linux
+
+   ```bash
+   python3 -m venv env
+   ```
+
+   ```bash
    source env/bin/activate
    ```
 
