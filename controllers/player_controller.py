@@ -546,7 +546,9 @@ class PlayerController:
 
         # 2️⃣ Si aucun joueur n'est enregistré, affiche un message et sort
         if not players:
-            print("Aucun joueur trouvé.\n")
+            print("\n🔍  Aucun joueur enregistré.\n")
+            print("⚠️  Veuillez d'abord créer des joueurs.\n")
+
             return
 
         # 3️⃣ Affiche la liste des joueurs avec numérotation et détails
