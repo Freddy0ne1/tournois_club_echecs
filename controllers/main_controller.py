@@ -4,6 +4,7 @@ Contrôleur principal pour démarrer l'application.
 
 from models.player import Player
 
+from views.console_view import ConsoleView
 from controllers.tournament_management import TournamentManagement
 from controllers.tournament_players import TournamentPlayers
 from controllers.player_controller import PlayerController
@@ -44,46 +45,6 @@ class MainController:
         Player.load_all()
 
     # -----------------------
-    #   MÉTHODES D'AIDE
-    # -----------------------
-
-    # ------- Affichage d’un menu numéroté et lecture du choix utilisateur -------
-    def _show_menu(self, title, options):
-        """
-        Affiche un menu numéroté et lit le choix de l'utilisateur·rice.
-        Paramètres :
-        - title   : titre du menu (str)
-        - options : liste d'options (list de str)
-        Étapes :
-        1. Affiche le titre du menu
-        2. Affiche chaque option avec un numéro
-        3. Demande une saisie numérique valide correspondant à une option
-        4. Retourne le numéro choisi
-        """
-        # 1️⃣ Affiche l'en‑tête avec le titre du menu
-        print(f"\n=== {title} ===\n")
-
-        # 2️⃣ Parcourt la liste d'options et les affiche avec numérotation
-        for idx, text in enumerate(options, 1):
-            print(f"{idx}. {text}")
-
-        # 3️⃣ Boucle de saisie pour obtenir un choix valide
-        while True:
-            # 🅰 Invite l'utilisateur à saisir un numéro
-            val = input("\nVotre choix : ").strip()
-
-            # 🅱 Vérifie que la saisie est bien un nombre
-            if val.isdigit():
-                num = int(val)
-
-                # 🅲 Vérifie que le nombre correspond à une option disponible
-                if 1 <= num <= len(options):
-                    return num  # Retourne le choix validé
-
-            # 🅳 Si la saisie est invalide, affiche un message d'erreur et redemande
-            print(f"❌ Option invalide. Entrez un nombre entre 1 et {len(options)}.")
-
-    # -----------------------
     #   MENU PRINCIPAL
     # -----------------------
 
@@ -115,7 +76,7 @@ class MainController:
         # 3️⃣ Boucle infinie jusqu'à ce que l'utilisateur choisisse de quitter
         while True:
             # 🅰 Affiche le menu et récupère le choix de l'utilisateur
-            choice = self._show_menu("Menu Principal", options)
+            choice = ConsoleView.menu("Menu Principal", options, show_back=False)
 
             # 🅱 Si l'utilisateur choisit de quitter, on sort de la boucle
             if choice == 4:
@@ -164,16 +125,15 @@ class MainController:
             "Supprimer joueur",
             "Rechercher joueur",
             "Lister joueurs",
-            "Retour",
         ]
 
         # 4️⃣ Boucle d'affichage et de gestion des choix
         while True:
             # 🅰 Affiche le menu des joueurs
-            choice = self._show_menu("Menu Joueurs", options)
+            choice = ConsoleView.menu("Menu Joueurs", options)
 
             # 🅱 Option 'Retour' → sortir de la boucle
-            if choice == 6:
+            if choice == 0:
                 break
 
             # 🅲 Récupère et exécute l'action associée au choix
@@ -219,16 +179,15 @@ class MainController:
             "Saisir scores du round",
             "Démarrer le round suivant",
             "Afficher le classement",
-            "Retour",
         ]
 
         # 3️⃣ Boucle d'affichage et de gestion des choix
         while True:
             # 🅰 Affiche le menu des tournois et lit la saisie
-            choice = self._show_menu("Menu Tournois", options)
+            choice = ConsoleView.menu("Menu Tournois", options)
 
             # 🅱 Si l'utilisateur choisit 'Retour', on sort de la boucle
-            if choice == 10:
+            if choice == 0:
                 break
 
             # 🅲 Recherche et exécution de l'action associée
@@ -252,7 +211,7 @@ class MainController:
         """
         # 1️⃣ Dictionnaire des actions disponibles pour chaque option du menu Rapports
         actions = {
-            1: self.tour_ctrl2.list_registered_players,
+            1: self.player_ctrl.list_players,
             2: self.tour_ctrl.list_tournaments,
             3: self.tour_ctrl2.show_tournament_header,
             4: self.tour_ctrl2.show_tournament_players,
@@ -266,16 +225,15 @@ class MainController:
             "Nom et dates d'un tournoi donné",
             "Joueurs d'un tournoi (ordre alphabétique)",
             "Tous les rounds + matches d'un tournoi",
-            "Retour",
         ]
 
         # 3️⃣ Boucle de navigation dans le menu Rapports
         while True:
             # 🅰 Affiche le menu et lit le choix de l'utilisateur
-            choice = self._show_menu("Menu Rapports", options)
+            choice = ConsoleView.menu("Menu Rapports", options)
 
             # 🅱 Si l'utilisateur choisit 'Retour', on sort de la boucle
-            if choice == 6:
+            if choice == 0:
                 break
 
             # 🅲 Recherche et exécution de l'action correspondant au choix
