@@ -28,9 +28,18 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data" / "tournaments"
 EXPORT_DIR = BASE_DIR / "export"
 
-# 4️⃣ Crée automatiquement le dossier d'export s'il n'existe pas déjà
-#    exist_ok=True : évite une erreur si le dossier existe déjà
-EXPORT_DIR.mkdir(exist_ok=True)
+
+def create_export_directory():
+    """
+    Crée le dossier d'export pour les rapports.
+    Étapes :
+    1. Vérifie si le dossier existe déjà
+    2. Si non, le crée
+    """
+    # 1️⃣ Vérifie si le dossier existe déjà
+    if not EXPORT_DIR.exists():
+        # 2️⃣ Si non, le crée
+        EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class TournamentControllerBase:
@@ -191,11 +200,7 @@ class TournamentControllerBase:
         # 1️⃣ Vide la liste interne des tournois avant de recharger
         self._tournaments.clear()
 
-        # 2️⃣ Vérifie que le dossier de données existe
-        if not DATA_DIR.exists():
-            return
-
-        # 3️⃣ Parcourt tous les fichiers JSON présents dans le dossier
+        # 2️⃣ Parcourt tous les fichiers JSON présents dans le dossier
         for file in DATA_DIR.glob("*.json"):
             try:
                 # 🅰 Tente de charger le tournoi grâce à Tournament.load()

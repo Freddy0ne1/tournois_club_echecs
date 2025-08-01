@@ -9,7 +9,7 @@ from controllers.tournament_players import TournamentPlayers
 from controllers.player_controller import PlayerController
 from controllers.tournament_reports import TournamentReports
 from controllers.tournament_rounds import TournamentRound
-from views.console_view import ConsoleView
+
 from .tournament_controller_base import TournamentControllerBase
 
 
@@ -38,7 +38,6 @@ class MainController:
         self.tour_ctrl2 = TournamentReports()
         self.tour_ctrl3 = TournamentPlayers()
         self.tour_ctrl4 = TournamentRound()
-        self.tour_ctrl5 = ConsoleView()
         self.tour_ctrl_base = TournamentControllerBase()
 
         # 3️⃣ Recharge les joueurs sauvegardés précédemment

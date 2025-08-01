@@ -9,6 +9,7 @@ from views.console_view import ConsoleView
 from .tournament_controller_base import (
     TournamentControllerBase as TournamentReportsController,
     EXPORT_DIR,
+    create_export_directory,
 )
 
 
@@ -246,6 +247,9 @@ class TournamentReports(TournamentReportsController):
         3. Sinon → écrit les données dans un tableau HTML
         4. Affiche un message de confirmation avec le chemin complet
         """
+        # 0️⃣ Vérifie que le dossier d'export existe, sinon le crée
+        create_export_directory()
+
         # 1️⃣ Construit le chemin complet du fichier d'export
         path = EXPORT_DIR / f"{filename}.{fmt}"
 
