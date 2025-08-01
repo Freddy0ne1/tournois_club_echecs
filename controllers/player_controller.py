@@ -255,7 +255,7 @@ class PlayerController:
             if not re.match(r"AB\d{5}$", national_id):
                 print(
                     f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). "
-                    f"Exemple attendu : AB12345\n"
+                    f"L'ID doit commencer par 'AB' ensuite 5 chiffres (ex : AB12345)\n"
                 )
                 continue
 
@@ -341,22 +341,28 @@ class PlayerController:
 
         # 2️⃣ Demande à l'utilisateur de choisir le joueur à modifier
         player = self._choose_player("modifier")
-        if not player:  # 🅰 Annule si aucun joueur n'est sélectionné
-            return
+        if not player:
+            return None  # 🅰 Annule si aucun joueur n'est sélectionné
 
         # 3️⃣ Affiche les informations actuelles pour donner le contexte
         self._display_player_info(player, "actuelles")
 
-        # 4️⃣ Demande et met à jour les champs modifiables
+        # 4️⃣ Mise à jour des champs du joueur (cette méthode renvoie False si annulartion)
+        success = self._update_player_fields(player)
+        if not success:  # 🅱 Si l'utilisateur abandonne la modification
+            print("❌ Modification annulée.")
+            return None  # Abandonne la modification
+
+        # 5️⃣ Demande et met à jour les champs modifiables
         self._update_player_fields(player)
 
-        # 5️⃣ Sauvegarde les changements dans le registre (players.json)
+        # 6️⃣ Sauvegarde les changements dans le registre (players.json)
         Player.save_all()
 
-        # 6️⃣ Confirmation et affichage des nouvelles informations
+        # 7️⃣ Confirmation et affichage des nouvelles informations
         self._confirm_player_update(player)
 
-        # 7️⃣ Retourne le joueur modifié
+        # 8️⃣ Retourne le joueur modifié
         return player
 
     # ------- Affichage des informations d'un joueur (actuelles ou mises à jour) -------
@@ -370,11 +376,11 @@ class PlayerController:
             un champ vide permet de conserver la valeur existante
         """
         # 1️⃣ Affiche un titre contextualisé (actuelles ou nouvelles infos)
-        print(
-            f"\n--- Informations {label} de {player.first_name} {player.last_name} ---"
-        )
+        print(f"\n--- Informations {label} du joueur ---")
 
         # 2️⃣ Affiche les informations principales
+        print(f"Nom               : {player.last_name}")
+        print(f"Prénom            : {player.first_name}")
         print(f"ID                : {player.national_id}")
         print(f"Date de naissance : {player.birth_date}")
 
@@ -392,17 +398,23 @@ class PlayerController:
         3. Demande une nouvelle date de naissance (vide = conserver l'ancienne)
             - Valide le format jj/mm/aaaa
         """
-        # 1️⃣ Demande un nouveau nom de famille (laisser vide pour garder l'ancien)
+        # 1️⃣ Demande une nouvelle identifiant national et vérifie son unicité
+        national_id = self._ask_unique_national_id()
+        if not national_id:  # 🅰 Si l'utilisateur abandonne, on sort
+            return False
+        player.national_id = national_id
+
+        # 2️⃣ Demande un nouveau nom de famille (laisser vide pour garder l'ancien)
         value = input(f"Nom [{player.last_name}] : ").strip()
         if value:  # 🅰 Met le nom en majuscules si une nouvelle valeur est saisie
             player.last_name = value.upper()
 
-        # 2️⃣ Demande un nouveau prénom (laisser vide pour garder l'ancien)
+        # 3️⃣ Demande un nouveau prénom (laisser vide pour garder l'ancien)
         value = input(f"Prénom [{player.first_name}] : ").strip()
         if value:  # 🅱 Met une majuscule initiale si une nouvelle valeur est saisie
             player.first_name = value.capitalize()
 
-        # 3️⃣ Demande une nouvelle date de naissance
+        # 4️⃣ Demande une nouvelle date de naissance
         while True:
             value = input(f"Date de naissance [{player.birth_date}] : ").strip()
             if value == "":
