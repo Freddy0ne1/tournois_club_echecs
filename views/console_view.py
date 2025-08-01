@@ -27,38 +27,46 @@ class ConsoleView:
     # -----------------------
 
     @staticmethod
-    def menu(title, options):
+    def menu(title, options, show_back=True):
         """
         Affiche un menu interactif numéroté et retourne le choix sélectionné.
+
+        Spécificité :
+        - L'option 0 est automatiquement ajoutée pour "Retour"
+          (inutile de l'ajouter dans la liste passée en paramètre).
 
         Paramètres :
         - title (str)   : le titre du menu à afficher.
         - options (list): liste de chaînes représentant les différentes options.
 
         Retour :
-        - int : numéro de l'option choisie par l'utilisateur (1 = première option).
+        - int : numéro de l'option choisie par l'utilisateur (0 = Retour).
         """
         # 1️⃣ Affiche un en-tête clair pour présenter le menu
-        print(f"\n=== {title} ===")
+        print(f"\n=== {title} ===\n")
 
-        # 2️⃣ Parcourt toutes les options et les affiche avec une numérotation
+        # 2️⃣ Affiche les autres options avec une numérotation à partir de 1
         for i, option in enumerate(options, 1):
             print(f"{i}. {option}")
 
-        # 3️⃣ Boucle jusqu'à obtenir une saisie valide
+        # 3️⃣ Affiche toujours l'option 0 pour revenir en arrière
+        if show_back:
+            print("0. Retour")
+
+        # 4️⃣ Boucle jusqu'à obtenir une saisie valide
         while True:
             # 🅰 Demande une saisie utilisateur et supprime les espaces inutiles
-            choice = input("Votre choix : ").strip()
+            choice = input("\nVotre choix : ").strip()
 
             # 🅱 Vérifie si la saisie est bien un nombre entier
             if choice.isdigit():
                 num = int(choice)
-                # 🅲 Vérifie si ce nombre est dans la plage d'options disponibles
-                if 1 <= num <= len(options):
+                # 🅲 Autorise la valeur 0
+                if 0 <= num <= len(options):
                     return num  # choix valide → on retourne le numéro choisi
 
-            # 4️⃣ En cas d'erreur (non nombre ou hors plage), on réaffiche un message
-            print(f"❌ Option invalide, entrez un nombre entre 1 et {len(options)}.")
+            # 5️⃣ En cas d'erreur (non nombre ou hors plage), on réaffiche un message
+            print(f"❌ Option invalide, entrez un nombre entre 0 et {len(options)}.")
 
     # -----------------------
     #   AFFICHAGE DES JOUEURS
