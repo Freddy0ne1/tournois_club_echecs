@@ -206,7 +206,7 @@ class MainController:
             6: self.tour_ctrl4.start_tournament,
             7: self.tour_ctrl4.enter_scores_current_round,
             8: self.tour_ctrl4.start_next_round,
-            9: self.tour_ctrl5.show_leaderboard,
+            9: self.tour_ctrl2.show_leaderboard,
         }
 
         # 2️⃣ Liste des options affichées dans le menu tournois

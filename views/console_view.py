@@ -134,7 +134,7 @@ class ConsoleView:
             rang. NOM Prénom - points pts
         """
         # 1️⃣ Affiche un titre avec le nom du tournoi
-        print(f"\n=== Classement : {tournament.name} ===")
+        print(f"\n=== Classement du tournoi : {tournament.name} ===")
 
         # 2️⃣ Trie les joueurs par nombre de points décroissant
         ordered = sorted(tournament.players, key=lambda p: p.points, reverse=True)
