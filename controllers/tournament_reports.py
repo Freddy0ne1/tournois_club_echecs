@@ -247,13 +247,13 @@ class TournamentReports(TournamentReportsController):
         3. Sinon → écrit les données dans un tableau HTML
         4. Affiche un message de confirmation avec le chemin complet
         """
-        # 0️⃣ Vérifie que le dossier d'export existe, sinon le crée
+        # 1️⃣ Vérifie que le dossier d'export existe, sinon le crée
         create_export_directory()
 
-        # 1️⃣ Construit le chemin complet du fichier d'export
+        # 2️⃣ Construit le chemin complet du fichier d'export
         path = EXPORT_DIR / f"{filename}.{fmt}"
 
-        # 2️⃣ Si le format demandé est CSV
+        # 3️⃣ Si le format demandé est CSV
         if fmt == "csv":
             # 🅰 Ouvre le fichier en écriture texte avec UTF-8
             with path.open("w", newline="", encoding="utf-8") as f:
@@ -264,7 +264,7 @@ class TournamentReports(TournamentReportsController):
                 writer.writerows(rows)
 
         else:
-            # 3️⃣ Si le format n'est pas CSV → export HTML
+            # 4️⃣ Si le format n'est pas CSV → export HTML
             with path.open("w", encoding="utf-8") as f:
                 # 🅰 Début du tableau HTML avec en-têtes
                 f.write("<table border='1'>\n<tr>")
@@ -280,7 +280,7 @@ class TournamentReports(TournamentReportsController):
                 # 🅲 Fin du tableau
                 f.write("</table>")
 
-        # 4️⃣ Affiche un message confirmant la création du fichier
+        # 5️⃣ Affiche un message confirmant la création du fichier
         print(f"✓ Exporté dans : {path.resolve()}")
 
     # ------- Demande et exécution d'un export de rapport -------
