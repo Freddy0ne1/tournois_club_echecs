@@ -189,7 +189,8 @@ class TournamentManagement(TournamentManagementController):
         print("\n✅ Tournoi créé.\n")
 
         # 3️⃣ Affiche un récapitulatif clair des données du tournoi
-        print(f"--- Informations du tournoi '{tournament.name}' ---\n")
+        print("--- Informations du tournoi ---\n")
+        print(f"Nom              : {tournament.name}")
         print(f"Lieu             : {tournament.place}")
         print(f"Dates            : {tournament.start_date} → {tournament.end_date}")
         print(f"Description      : {tournament.description}")
