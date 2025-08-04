@@ -11,6 +11,7 @@ Il repose sur TournamentRoundController (hérité de TournamentControllerBase)
 pour la gestion des tournois et la persistance des données.
 """
 
+from views.console_view import ConsoleView
 from .tournament_controller_base import (
     TournamentControllerBase as TournamentRoundController,
 )
@@ -171,40 +172,57 @@ class TournamentRound(TournamentRoundController):
     def start_next_round(self):
         """
         Démarre le round suivant du tournoi sélectionné.
+
         Étapes :
-        1. Sélection du tournoi
-        2. Vérifie que le tournoi n'est pas terminé
-        3. Vérifie que le round précédent est bien clôturé
-        4. Vérifie que le nombre maximum de rounds n'est pas dépassé
-        5. Lance le round suivant et sauvegarde l'état du tournoi
+        1. Recharge les tournois depuis les fichiers
+        2. Filtre uniquement les tournois en cours
+        3. Affiche un message s'il n'y a aucun tournoi disponible
+        4. Sélectionne le tournoi à mettre à jour
+        5. Vérifie les conditions avant de démarrer le round
+        6. Si tous les rounds sont joués, clôture silencieuse
+        7. Sinon, lance le round suivant et sauvegarde les données
         """
-        # 1️⃣ Affiche le titre pour indiquer l'action en cours
+        # 1️⃣ Affiche un titre pour l’action
         print("\n--- Démarrage du round suivant ---")
 
-        # 2️⃣ Recharge les tournois depuis les fichiers
+        # 2️⃣ Recharge les données à jour depuis les fichiers
         self.reload_tournaments()
 
-        # 2️⃣ Permet à l'utilisateur de choisir le tournoi
-        tournament = self._choose("démarrer le round suivant")
-        if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
+        # 3️⃣ Filtre les tournois avec statut "en cours" et trie par nom
+        in_progress = sorted(
+            [t for t in self._tournaments if t.status == "en cours"],
+            key=lambda t: t.name.lower(),
+        )
+
+        # 4️⃣ Si aucun tournoi en cours, message d'information
+        if not in_progress:
+            print("\n🔍 Aucun tournoi en cours pour le moment.")
+            print("💡 Démarrez un tournoi avant d'accéder à cette fonctionnalité.\n")
             return
 
-        # 3️⃣ Empêche de lancer un round si le tournoi est déjà terminé
-        if tournament.status == "terminé":
-            print(f"❌ Impossible : le tournoi '{tournament.name}' est déjà terminé.")
+        # 5️⃣ Sélection du tournoi concerné
+        tournament = self._choose(
+            "démarrer le round suivant", tournament_list=in_progress
+        )
+        if not tournament:
             return
 
-        # 4️⃣ Vérifie que le dernier round est bien clôturé avant d'en lancer un nouveau
+        # 6️⃣ Vérifie si le dernier round est clôturé
         if tournament.rounds and not tournament.rounds[-1].end_time:
-            print("⚠️  Il faut clôturer le round en cours avant de démarrer le suivant.")
+            print(
+                "⚠️  Il faut clôturer le round en cours avant d'en démarrer un nouveau."
+            )
             return
 
-        # 5️⃣ Vérifie que le nombre maximum de rounds n'est pas déjà atteint
-        if tournament.current_round_index >= tournament.total_rounds:
-            print("ℹ️  Tous les rounds ont déjà été joués.")
+        # 7️⃣ Si tous les rounds ont été joués, on clôture sans message
+        if tournament.current_round_index >= tournament.total_rounds and all(
+            r.end_time for r in tournament.rounds
+        ):
+            tournament.status = "terminé"
+            self._save(tournament)
             return
 
-        # 6️⃣ Lance le nouveau round et sauvegarde l'état du tournoi
+        # 8️⃣ Démarre le prochain round
         tournament.start_next_round()
         self._save(tournament)
         print("🏁 Nouveau round démarré.")
@@ -218,16 +236,6 @@ class TournamentRound(TournamentRoundController):
         """
         Saisie des scores du round en cours.
 
-        Étapes :
-        1. Affiche le titre principal
-        2. Recharge les tournois depuis les fichiers
-        3. Filtre uniquement les tournois en cours
-        4. Affiche un message si aucun tournoi en cours
-        5. Sélectionne le tournoi
-        6. Vérifie que la saisie des scores est autorisée
-        7. Si le round est déjà terminé, affiche les résultats
-        8. Sinon, collecte les scores pour chaque match
-        9. Enregistre les résultats et affiche le récapitulatif
         """
         # 1️⃣ Affiche le titre principal
         print("\n--- Saisie des scores du round en cours ---")
@@ -235,7 +243,7 @@ class TournamentRound(TournamentRoundController):
         # 2️⃣ Recharge les tournois depuis les fichiers présents dans /data/tournaments
         self.reload_tournaments()
 
-        # 3️⃣ Filtre les tournois avec statut "en cours" (et trie A → Z)
+        # 3️⃣ Filtre les tournois avec statut "en cours" (et trie par ordre alphabétique)
         in_progress = sorted(
             [t for t in self._tournaments if t.status == "en cours"],
             key=lambda t: t.name.lower(),
@@ -244,36 +252,88 @@ class TournamentRound(TournamentRoundController):
         # 4️⃣ Si aucun tournoi en cours, affiche un message d'information et quitte
         if not in_progress:
             print("\n🔍 Aucun tournoi démarré pour le moment.")
-            print("💡 Utilisez l’option 6 pour démarrer un tournoi.\n")
+            print("💡 Utilisez l'option 6 pour démarrer un tournoi.\n")
             return
 
-        # 5️⃣ Sélectionne un tournoi parmi ceux en cours
+        # 5️⃣ Permet à l'utilisateur de choisir un tournoi en cours
         tournament = self._choose("saisir les scores", tournament_list=in_progress)
-        if not tournament:
-            return  # Annulation de l'utilisateur
+        if not tournament or not self._can_enter_scores(tournament):
+            return  # Annulation ou tournoi non éligible
 
-        # 6️⃣ Vérifie si la saisie des scores est autorisée
-        if not self._can_enter_scores(tournament):
-            return
-
-        # 7️⃣ Récupère le round en cours et son numéro
+        # 6️⃣ Récupère le round actuel et son numéro
         rnd, num = tournament.rounds[-1], tournament.current_round_index
 
-        # 8️⃣ Vérifie si le round est déjà terminé, si oui affiche les résultats
+        # 7️⃣ Vérifie si le round est déjà terminé
         if self._is_round_finished(rnd, num):
             return
 
-        # 9️⃣ Collecte les scores saisis pour chaque match
+        # 8️⃣ Collecte les scores pour chaque match du round
         results, recap = self._collect_scores(rnd, num, tournament.name)
 
-        # 🔟 Enregistre les résultats dans le tournoi
+        # 9️⃣ Enregistre les résultats et sauvegarde l’état du tournoi
         tournament.record_results(results)
-
-        # 🔁 Sauvegarde le tournoi mis à jour
         self._save(tournament)
 
-        # ✅ Affiche le récapitulatif des scores saisis
+        # 🔟 Affiche un récapitulatif des scores saisis
         self._display_scores_recap(recap, num)
+
+        # 🏁 Si tous les rounds ont été joués, on clôture le tournoi et annonce le vainqueur
+        if tournament.current_round_index >= tournament.total_rounds:
+            self._finaliser_tournoi_si_termine(tournament)
+
+    # ------- Finalisation du tournoi si tous les rounds sont joués -------
+    def _finaliser_tournoi_si_termine(self, tournament):
+        """
+        Clôture un tournoi arrivé à son terme et détermine le gagnant.
+
+        Règles de départage :
+        1. Score le plus élevé
+        2. Résultat du duel direct si égalité
+        3. Ordre alphabétique en cas d'égalité parfaite
+        """
+        # 1️⃣ Met à jour le statut du tournoi et sauvegarde
+        tournament.status = "terminé"
+        self._save(tournament)
+
+        # 2️⃣ Récupère le score maximal et les joueurs ex-æquo
+        top_score = max(p.points for p in tournament.players)
+        top_players = [p for p in tournament.players if p.points == top_score]
+
+        # 3️⃣ S'il y a un seul gagnant, on l'affiche directement
+        if len(top_players) == 1:
+            winner = top_players[0]
+        else:
+            # 4️⃣ Si plusieurs joueurs ont le même score : tentative de départage par duel direct
+            winner = None
+            for rnd in tournament.rounds:
+                for match in rnd.matches:
+                    p1, p2 = match.players
+                    s1, s2 = match.scores
+                    if {p1, p2} <= set(top_players):
+                        if s1 > s2:
+                            winner = p1
+                        elif s2 > s1:
+                            winner = p2
+                        break
+                if winner:
+                    break
+
+            # 5️⃣ Si match nul ou aucun duel, départage alphabétique
+            if not winner:
+                winner = sorted(
+                    top_players,
+                    key=lambda p: (p.last_name.lower(), p.first_name.lower()),
+                )[0]
+
+        # 6️⃣ Affiche le message de fin de tournoi et le classement final
+        print(f"\n🏆 Tournoi « {tournament.name} » terminé !")
+        print(f"📍 Lieu : {tournament.place}")
+        print(f"📅 Du {tournament.start_date} au {tournament.end_date}")
+        print(f"👥 Participants : {len(tournament.players)}")
+        print(f"🎖 Gagnant : {winner.last_name} {winner.first_name}")
+
+        # 7️⃣ Affiche le classement complet des joueurs
+        ConsoleView.show_leaderboard(tournament)
 
     # ------- Vérification des conditions pour saisir les scores -------
     def _can_enter_scores(self, tournament):
