@@ -181,6 +181,9 @@ class TournamentRound(TournamentRoundController):
         # 1️⃣ Affiche le titre pour indiquer l'action en cours
         print("\n--- Démarrage du round suivant ---")
 
+        # 2️⃣ Recharge les tournois depuis les fichiers
+        self.reload_tournaments()
+
         # 2️⃣ Permet à l'utilisateur de choisir le tournoi
         tournament = self._choose("démarrer le round suivant")
         if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
@@ -223,6 +226,9 @@ class TournamentRound(TournamentRoundController):
         """
         # 1️⃣ Affiche un titre pour signaler la saisie des scores
         print("\n--- Saisie des scores du round en cours ---")
+
+        # 2️⃣ Recharge les tournois depuis les fichiers
+        self.reload_tournaments()
 
         # 2️⃣ Sélection du tournoi
         in_progress = sorted(

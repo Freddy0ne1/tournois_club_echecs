@@ -40,11 +40,16 @@ class TournamentReports(TournamentReportsController):
 
         # 2️⃣ Affiche un titre et invite l'utilisateur à choisir un tournoi
         print("\n--- Affichage du classement ---")
+
+        # Recharge les tournois depuis le disque
+        self.reload_tournaments()
+
+        # 3️⃣ Sélection du tournoi à consulter
         tournament = self._choose("consulter le classement")
         if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
             return
 
-        # 3️⃣ Vérifie si le tournoi a démarré
+        # 4️⃣ Vérifie si le tournoi a démarré
         if tournament.status == "non démarré":
             print(
                 f"\n❌ Le tournoi '{tournament.name}' n'a pas encore démarré. "
@@ -52,7 +57,7 @@ class TournamentReports(TournamentReportsController):
             )
             return
 
-        # 4️⃣ Délègue l'affichage du classement à la vue console
+        # 5️⃣ Délègue l'affichage du classement à la vue console
         ConsoleView.show_leaderboard(tournament)
 
     # ------- Liste de tous les joueurs inscrits à au moins un tournoi -------

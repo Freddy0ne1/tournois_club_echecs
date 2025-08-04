@@ -29,51 +29,56 @@ class TournamentPlayers(TournamentPlayersController):
     # ------- Gestion des joueurs dans un tournoi (ajout / retrait) -------
     def manage_players_in_tournament(self):
         """
-        Gère les joueurs d'un tournoi (ajout ou suppression).
+        Gère les joueurs d'un tournoi : ajout ou suppression.
+
         Étapes :
-        1. Affiche un titre pour la gestion des joueurs
-        2. Recharge les tournois depuis les fichiers
-        3. Permet de choisir le tournoi concerné
-        4. Vérifie que le tournoi n'est pas encore démarré
-        5. Affiche un menu en boucle pour ajouter ou retirer des joueurs
+        1. Affiche un en-tête clair pour l'action en cours
+        2. Recharge tous les tournois existants depuis le disque
+        3. Ne conserve que ceux qui sont "non démarré" et les trie A → Z
+        4. Demande à l'utilisateur de choisir un tournoi à modifier
+        5. Si le tournoi est déjà démarré, empêche toute modification
+        6. Affiche une boucle d'actions possibles :
+        - Ajouter des joueurs
+        - Retirer des joueurs
+        - Quitter la gestion
         """
-        # 1️⃣ Affiche un titre pour indiquer la gestion des joueurs
+        # 1️⃣ Affiche un titre pour introduire la section
         print("\n--- Gestion des joueurs d'un tournoi ---")
 
-        # 2️⃣ Recharge les tournois depuis les fichiers présents dans /data/tournaments
+        # 2️⃣ Recharge la liste des tournois depuis le dossier /data/tournaments
         self.reload_tournaments()
 
-        # Ne conserve que les tournois non démarrés
+        # 3️⃣ Filtre les tournois pour ne garder que ceux "non démarré", triés A→Z
         self._tournaments = sorted(
             [t for t in self._tournaments if t.status == "non démarré"],
             key=lambda t: t.name.lower(),
         )
 
-        # 3️⃣ Permet de choisir le tournoi concerné
+        # 4️⃣ Demande à l’utilisateur de choisir un tournoi à gérer
         tournament = self._choose("gérer les joueurs de")
-        if not tournament:  # 🅰 Annule si aucun tournoi n'est sélectionné
+        if not tournament:  # ❌ Annule si aucun tournoi n’est sélectionné
             return
 
-        # 4️⃣ Empêche toute modification si le tournoi est déjà démarré
+        # 5️⃣ Vérifie que le tournoi sélectionné n’a pas encore été lancé
         if tournament.status != "non démarré":
             print("\n❌ Impossible après démarrage.")
             return
 
-        # 5️⃣ Boucle du menu : permet d'ajouter, retirer des joueurs ou quitter
+        # 6️⃣ Boucle principale : propose d’ajouter, retirer ou quitter
         while True:
-            # 🅰 Affiche le résumé du tournoi et le menu des actions
+            # 🅰 Affiche les infos du tournoi + menu d’options
             self._show_tournament_summary(tournament)
 
-            # 🅱 Demande le choix de l'utilisateur
+            # 🅱 Demande une action à l’utilisateur
             choice = input("Votre choix : ").strip()
 
-            # 🅲 Exécute l'action correspondante
+            # 🅲 Exécute l’action choisie
             if choice == "1":
-                self._add_players(tournament)  # Ajout de joueurs
+                self._add_players(tournament)  # ➕ Ajouter des joueurs
             elif choice == "2":
-                self._remove_players(tournament)  # Suppression de joueurs
+                self._remove_players(tournament)  # ➖ Retirer des joueurs
             elif choice == "0":
-                break  # Sortie du menu
+                break  # 🔚 Quitter la gestion
 
     # ------- Affiche le résumé du tournoi et le menu de gestion des joueurs -------
     def _show_tournament_summary(self, tournament):
