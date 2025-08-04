@@ -201,13 +201,15 @@ class TournamentManagement(TournamentManagementController):
     # -----------------------
 
     def list_tournaments(self):
-        """Affiche la liste des tournois."""
-        # 1️⃣ Délégation de l'affichage détaillé à ConsoleView
+        """Affiche la liste des tournois triée par nom."""
+        # 1️⃣ Trie les tournois par nom (insensible à la casse)
+        tournaments_sorted = sorted(self._tournaments, key=lambda t: t.name.lower())
+        # 2️⃣ Délégation de l'affichage détaillé à ConsoleView
         #    Cette méthode va lister chaque tournoi avec ses infos clés
-        ConsoleView.show_tournaments(self._tournaments)
-        # 2️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
-        if not self._tournaments:
-            print("\n🔍 Aucun tournoi enregistré pour le moment.\n")
+        ConsoleView.show_tournaments(tournaments_sorted)
+        # 3️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
+        if not tournaments_sorted:
+            print("\n🔍 Aucun tournoi enregistré pour le moment.")
             print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
 
     # -----------------------

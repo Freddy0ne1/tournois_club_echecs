@@ -43,6 +43,12 @@ class TournamentPlayers(TournamentPlayersController):
         # 2️⃣ Recharge les tournois depuis les fichiers présents dans /data/tournaments
         self.reload_tournaments()
 
+        # Ne conserve que les tournois non démarrés
+        self._tournaments = sorted(
+            [t for t in self._tournaments if t.status == "non démarré"],
+            key=lambda t: t.name.lower(),
+        )
+
         # 3️⃣ Permet de choisir le tournoi concerné
         tournament = self._choose("gérer les joueurs de")
         if not tournament:  # 🅰 Annule si aucun tournoi n'est sélectionné
@@ -112,7 +118,7 @@ class TournamentPlayers(TournamentPlayersController):
 
         # 3️⃣ Si aucun joueur disponible, affiche un message et quitte
         if not available:
-            print("\n👤 Tous les joueurs sont déjà inscrits.")
+            print("\n👤 Aucun joueur disponible.")
             return
 
         # 4️⃣ Affiche la liste des joueurs disponibles avec un numéro

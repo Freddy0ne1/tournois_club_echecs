@@ -159,7 +159,8 @@ class TournamentControllerBase:
         """
         # 1️⃣ Si aucun tournoi n'est disponible, on informe l'utilisateur et on quitte
         if not self._tournaments:
-            print("\n🔍 Aucun tournoi disponible.")
+            print("\n🔍 Aucun tournoi enregistré pour le moment.")
+            print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
             return None
 
         # 2️⃣ Affiche la liste des tournois via la ConsoleView
