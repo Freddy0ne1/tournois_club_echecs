@@ -27,37 +27,36 @@ class TournamentReports(TournamentReportsController):
     def show_leaderboard(self):
         """
         Affiche le classement des joueurs pour un tournoi sélectionné.
+
         Étapes :
-        1. Recharge les tournois pour avoir des données à jour
-        2. Demande à l'utilisateur quel tournoi consulter
-        3. Affiche le classement via la vue console
+        1. Recharge les tournois depuis les fichiers
+        2. Filtre uniquement les tournois démarrés ou terminés
+        3. Affiche un message s'il n'y a aucun tournoi à afficher
+        4. Permet à l'utilisateur de sélectionner un tournoi
+        5. Affiche le classement via la vue console
         """
-        # 1️⃣ Recharge tous les tournois pour être sûr d'avoir
-        #    les informations les plus récentes et que Player.registry
-        #    est correctement synchronisé (remappage national_id → Player)
-        # self.reload_tournaments()
-        TournamentReportsController.reload_tournaments(self)
-
-        # 2️⃣ Affiche un titre et invite l'utilisateur à choisir un tournoi
-        print("\n--- Affichage du classement ---")
-
-        # Recharge les tournois depuis le disque
+        # 1️⃣ Recharge les tournois à jour
         self.reload_tournaments()
 
-        # 3️⃣ Sélection du tournoi à consulter
-        tournament = self._choose("consulter le classement")
-        if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
+        # 2️⃣ Ne conserve que les tournois en cours ou terminés (statut != "non démarré")
+        eligible = sorted(
+            [t for t in self._tournaments if t.status != "non démarré"],
+            key=lambda t: t.name.lower(),
+        )
+
+        # 3️⃣ Si aucun tournoi éligible, affiche un message et quitte
+        if not eligible:
+            print("\n🔍 Aucun tournoi démarré ou terminé pour le moment.")
+            print("💡 Démarrez un tournoi pour pouvoir consulter son classement.\n")
             return
 
-        # 4️⃣ Vérifie si le tournoi a démarré
-        if tournament.status == "non démarré":
-            print(
-                f"\n❌ Le tournoi '{tournament.name}' n'a pas encore démarré. "
-                "Aucun classement disponible.\n"
-            )
+        # 4️⃣ Titre et sélection du tournoi concerné
+        print("\n--- Affichage du classement ---")
+        tournament = self._choose("consulter le classement", tournament_list=eligible)
+        if not tournament:
             return
 
-        # 5️⃣ Délègue l'affichage du classement à la vue console
+        # 5️⃣ Affiche le classement via la vue
         ConsoleView.show_leaderboard(tournament)
 
     # ------- Liste de tous les joueurs inscrits à au moins un tournoi -------

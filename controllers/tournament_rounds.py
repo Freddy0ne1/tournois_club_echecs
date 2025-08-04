@@ -216,50 +216,63 @@ class TournamentRound(TournamentRoundController):
     # ------- Saisie et enregistrement des scores du round en cours -------
     def enter_scores_current_round(self):
         """
-        Saisit les scores du round en cours d'un tournoi.
+        Saisie des scores du round en cours.
+
         Étapes :
-        1. Sélectionne le tournoi
-        2. Vérifie que les scores peuvent être saisis
-        3. Si le round est déjà terminé, affiche le récapitulatif
-        4. Sinon, collecte les scores pour chaque match
-        5. Enregistre et affiche le résumé des résultats
+        1. Affiche le titre principal
+        2. Recharge les tournois depuis les fichiers
+        3. Filtre uniquement les tournois en cours
+        4. Affiche un message si aucun tournoi en cours
+        5. Sélectionne le tournoi
+        6. Vérifie que la saisie des scores est autorisée
+        7. Si le round est déjà terminé, affiche les résultats
+        8. Sinon, collecte les scores pour chaque match
+        9. Enregistre les résultats et affiche le récapitulatif
         """
-        # 1️⃣ Affiche un titre pour signaler la saisie des scores
+        # 1️⃣ Affiche le titre principal
         print("\n--- Saisie des scores du round en cours ---")
 
-        # 2️⃣ Recharge les tournois depuis les fichiers
+        # 2️⃣ Recharge les tournois depuis les fichiers présents dans /data/tournaments
         self.reload_tournaments()
 
-        # 2️⃣ Sélection du tournoi
+        # 3️⃣ Filtre les tournois avec statut "en cours" (et trie A → Z)
         in_progress = sorted(
             [t for t in self._tournaments if t.status == "en cours"],
             key=lambda t: t.name.lower(),
         )
-        tournament = self._choose("saisir les scores", tournament_list=in_progress)
-        if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
+
+        # 4️⃣ Si aucun tournoi en cours, affiche un message d'information et quitte
+        if not in_progress:
+            print("\n🔍 Aucun tournoi démarré pour le moment.")
+            print("💡 Utilisez l’option 6 pour démarrer un tournoi.\n")
             return
 
-        # 3️⃣ Vérifie si les scores peuvent être saisis (tournoi en cours, etc.)
+        # 5️⃣ Sélectionne un tournoi parmi ceux en cours
+        tournament = self._choose("saisir les scores", tournament_list=in_progress)
+        if not tournament:
+            return  # Annulation de l'utilisateur
+
+        # 6️⃣ Vérifie si la saisie des scores est autorisée
         if not self._can_enter_scores(tournament):
             return
 
-        # 4️⃣ Récupère le round en cours et son numéro
+        # 7️⃣ Récupère le round en cours et son numéro
         rnd, num = tournament.rounds[-1], tournament.current_round_index
 
-        # 5️⃣ Vérifie si le round est déjà terminé, si oui on sort
+        # 8️⃣ Vérifie si le round est déjà terminé, si oui affiche les résultats
         if self._is_round_finished(rnd, num):
             return
 
-        # 6️⃣ Collecte les scores saisis pour chaque match du round
+        # 9️⃣ Collecte les scores saisis pour chaque match
         results, recap = self._collect_scores(rnd, num, tournament.name)
 
-        # 7️⃣ Enregistre les résultats dans le tournoi
+        # 🔟 Enregistre les résultats dans le tournoi
         tournament.record_results(results)
 
-        # 8️⃣ Sauvegarde l'état mis à jour
+        # 🔁 Sauvegarde le tournoi mis à jour
         self._save(tournament)
 
-        # 9️⃣ Affiche le récapitulatif des scores saisis
+        # ✅ Affiche le récapitulatif des scores saisis
         self._display_scores_recap(recap, num)
 
     # ------- Vérification des conditions pour saisir les scores -------
