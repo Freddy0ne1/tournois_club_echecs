@@ -205,6 +205,10 @@ class TournamentManagement(TournamentManagementController):
         # 1️⃣ Délégation de l'affichage détaillé à ConsoleView
         #    Cette méthode va lister chaque tournoi avec ses infos clés
         ConsoleView.show_tournaments(self._tournaments)
+        # 2️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
+        if not self._tournaments:
+            print("\n🔍 Aucun tournoi enregistré pour le moment.\n")
+            print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
 
     # -----------------------
     #   MODIFICATION TOURNOI

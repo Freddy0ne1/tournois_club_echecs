@@ -31,24 +31,29 @@ class TournamentPlayers(TournamentPlayersController):
         """
         Gère les joueurs d'un tournoi (ajout ou suppression).
         Étapes :
-        1. Sélectionne le tournoi
-        2. Vérifie que le tournoi n'est pas encore démarré
-        3. Affiche un menu en boucle pour ajouter ou retirer des joueurs
+        1. Affiche un titre pour la gestion des joueurs
+        2. Recharge les tournois depuis les fichiers
+        3. Permet de choisir le tournoi concerné
+        4. Vérifie que le tournoi n'est pas encore démarré
+        5. Affiche un menu en boucle pour ajouter ou retirer des joueurs
         """
         # 1️⃣ Affiche un titre pour indiquer la gestion des joueurs
         print("\n--- Gestion des joueurs d'un tournoi ---")
 
-        # 2️⃣ Permet de choisir le tournoi concerné
+        # 2️⃣ Recharge les tournois depuis les fichiers présents dans /data/tournaments
+        self.reload_tournaments()
+
+        # 3️⃣ Permet de choisir le tournoi concerné
         tournament = self._choose("gérer les joueurs de")
         if not tournament:  # 🅰 Annule si aucun tournoi n'est sélectionné
             return
 
-        # 3️⃣ Empêche toute modification si le tournoi est déjà démarré
+        # 4️⃣ Empêche toute modification si le tournoi est déjà démarré
         if tournament.status != "non démarré":
             print("\n❌ Impossible après démarrage.")
             return
 
-        # 4️⃣ Boucle du menu : permet d'ajouter, retirer des joueurs ou quitter
+        # 5️⃣ Boucle du menu : permet d'ajouter, retirer des joueurs ou quitter
         while True:
             # 🅰 Affiche le résumé du tournoi et le menu des actions
             self._show_tournament_summary(tournament)
