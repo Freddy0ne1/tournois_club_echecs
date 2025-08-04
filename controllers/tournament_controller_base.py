@@ -148,39 +148,47 @@ class TournamentControllerBase:
     #   SÉLECTION D'UN TOURNOI
     # -----------------------
 
-    def _choose(self, action):
+    def _choose(self, action, tournament_list=None):
         """
-        Affiche la liste des tournois disponibles et demande à l'utilisateur
-        de choisir un index pour effectuer une action donnée.
-        Paramètre :
-        - action : texte affiché pour préciser l'action (ex. "modifier", "supprimer")
+        Affiche une liste de tournois (par défaut self._tournaments) et demande à
+        l'utilisateur de choisir un index pour effectuer une action donnée.
+
+        Paramètres :
+        - action          : texte affiché pour préciser l'action (ex. "modifier", "supprimer")
+        - tournament_list : liste de tournois à afficher (optionnel)
+
         Retour :
         - L'objet Tournament sélectionné, ou None si annulation ou saisie invalide.
         """
-        # 1️⃣ Si aucun tournoi n'est disponible, on informe l'utilisateur et on quitte
-        if not self._tournaments:
+        # 1️⃣ Utilise la liste fournie ou la liste par défaut
+        tournaments = (
+            tournament_list if tournament_list is not None else self._tournaments
+        )
+
+        # 2️⃣ Si aucun tournoi n'est disponible, informe l'utilisateur et quitte
+        if not tournaments:
             print("\n🔍 Aucun tournoi enregistré pour le moment.")
             print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
             return None
 
-        # 2️⃣ Affiche la liste des tournois via la ConsoleView
-        ConsoleView.show_tournaments(self._tournaments)
+        # 3️⃣ Affiche la liste des tournois via ConsoleView (triée par nom)
+        tournaments = sorted(tournaments, key=lambda t: t.name.lower())
+        ConsoleView.show_tournaments(tournaments)
 
-        # 3️⃣ Demande à l'utilisateur de saisir le numéro du tournoi
+        # 4️⃣ Demande à l'utilisateur de choisir un tournoi
         choice = input(f"\nNuméro du tournoi pour {action} : ").strip()
 
-        # 4️⃣ Vérifie que la saisie est bien un nombre
+        # 5️⃣ Vérifie que la saisie est un nombre valide
         if not choice.isdigit():
             print("\n❌ Veuillez entrer un numéro valide.")
             return None
 
-        # 5️⃣ Convertit la saisie en entier et vérifie que l'index est valide
         idx = int(choice)
-        if 1 <= idx <= len(self._tournaments):
+        if 1 <= idx <= len(tournaments):
             # 6️⃣ Retourne le tournoi sélectionné
-            return self._tournaments[idx - 1]
+            return tournaments[idx - 1]
 
-        # 7️⃣ Si l'index est hors plage, on avertit et on quitte
+        # 7️⃣ Si l'index est hors plage
         print("\n❌ Numéro hors plage.")
         return None
 

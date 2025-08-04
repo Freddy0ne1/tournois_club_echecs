@@ -48,22 +48,34 @@ class TournamentRound(TournamentRoundController):
         # 1️⃣ Affiche un titre pour signaler l'action
         print("\n--- Démarrage d'un tournoi ---")
 
-        # 2️⃣ Sélection du tournoi à démarrer
-        tournament = self._choose("démarrer")
+        # 2️⃣ Recharge les tournois depuis les fichiers
+        self.reload_tournaments()
+
+        # 3️⃣ Ne garde que les tournois non démarrés
+        non_started = [t for t in self._tournaments if t.status == "non démarré"]
+
+        # 4️⃣ Vérifie qu'il en reste
+        if not non_started:
+            print("\n🔍 Aucun tournoi non démarré trouvé.")
+            print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
+            return
+
+        # 5️⃣ Sélection du tournoi à démarrer
+        tournament = self._choose("démarrer", tournament_list=non_started)
         if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
             return
 
-        # 3️⃣ Vérifie si le tournoi peut être démarré (via méthode dédiée)
+        # 6️⃣ Vérifie si le tournoi peut être démarré (via méthode dédiée)
         if not self._can_start_tournament(tournament):
             return
 
-        # 4️⃣ Lance le tournoi et crée le premier round
+        # 7️⃣ Lance le tournoi et crée le premier round
         self._launch_tournament(tournament)
 
-        # 5️⃣ Affiche les appariements (matchs) du round en cours
+        # 8️⃣ Affiche les appariements (matchs) du round en cours
         self._display_rounds(tournament)
 
-        # 6️⃣ Indique à l'utilisateur comment saisir les scores
+        # 9️⃣ Indique à l'utilisateur comment saisir les scores
         print(
             "\n💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores du round."
         )
@@ -79,7 +91,10 @@ class TournamentRound(TournamentRoundController):
         """
         # 1️⃣ Vérifie qu'il y a au moins un joueur inscrit
         if not tournament.players:
-            print("\n❌ Impossible : aucun joueur n'est inscrit.")
+            print(
+                f"\n❌ Aucun joueur inscrit pour le tournoi '{tournament.name}' "
+                "(5. Ajouter/Retirer joueurs)."
+            )
             return False
 
         # 2️⃣ Vérifie que le nombre de joueurs est pair et au moins 2
