@@ -225,7 +225,11 @@ class TournamentRound(TournamentRoundController):
         print("\n--- Saisie des scores du round en cours ---")
 
         # 2️⃣ Sélection du tournoi
-        tournament = self._choose("saisir les scores")
+        in_progress = sorted(
+            [t for t in self._tournaments if t.status == "en cours"],
+            key=lambda t: t.name.lower(),
+        )
+        tournament = self._choose("saisir les scores", tournament_list=in_progress)
         if not tournament:  # 🅰 Annule si aucun tournoi sélectionné
             return
 
