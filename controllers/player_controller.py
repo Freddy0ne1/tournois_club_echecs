@@ -311,11 +311,11 @@ class PlayerController:
         print("\n✅ Joueur créé avec succès !\n")
 
         # 2️⃣ Affiche un titre clair avec le nom et le prénom du joueur
-        print(
-            f"--- Informations du joueur {player.last_name} {player.first_name} ---\n"
-        )
+        print("--- Informations du joueur créé ---\n")
 
         # 3️⃣ Affiche les informations détaillées
+        print(f"Nom               : {player.last_name}")
+        print(f"Prénom            : {player.first_name}")
         print(f"Date de naissance : {player.birth_date}")
         print(f"Identifiant       : {player.national_id}")
 
