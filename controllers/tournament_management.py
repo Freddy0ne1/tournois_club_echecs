@@ -210,7 +210,9 @@ class TournamentManagement(TournamentManagementController):
         # 3️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
         if not tournaments_sorted:
             print("\n🔍 Aucun tournoi enregistré pour le moment.")
-            print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
+            print(
+                "⚠️  Créez-en un pour commencer (Menu Tournois -> 1. Créer un tournoi)\n"
+            )
 
     # -----------------------
     #   MODIFICATION TOURNOI
