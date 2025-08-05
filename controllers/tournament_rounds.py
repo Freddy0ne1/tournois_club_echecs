@@ -58,7 +58,9 @@ class TournamentRound(TournamentRoundController):
         # 4️⃣ Vérifie qu'il en reste
         if not non_started:
             print("\n🔍 Aucun tournoi non démarré trouvé.")
-            print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
+            print(
+                "⚠️  Créez-en un pour commencer (Menu Tournois -> 1. Créer un tournoi)\n"
+            )
             return
 
         # 5️⃣ Sélection du tournoi à démarrer
