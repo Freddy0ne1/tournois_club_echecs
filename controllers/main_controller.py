@@ -35,10 +35,10 @@ class MainController:
         self.player_ctrl = PlayerController()
 
         # 2️⃣ Crée le contrôleur dédié aux tournois
-        self.tour_ctrl = TournamentManagement()
-        self.tour_ctrl2 = TournamentReports()
-        self.tour_ctrl3 = TournamentPlayers()
-        self.tour_ctrl4 = TournamentRound()
+        self.tour_mgmt = TournamentManagement()
+        self.tour_reports = TournamentReports()
+        self.tour_players = TournamentPlayers()
+        self.tour_rounds = TournamentRound()
         self.tour_ctrl_base = TournamentControllerBase()
 
         # 3️⃣ Recharge les joueurs sauvegardés précédemment
@@ -157,15 +157,15 @@ class MainController:
         """
         # 1️⃣ Dictionnaire associant chaque numéro d'option à une méthode du contrôleur de tournois
         actions = {
-            1: self.tour_ctrl.create_tournament,
-            2: self.tour_ctrl.modify_tournament,
-            3: self.tour_ctrl.delete_tournament,
-            4: self.tour_ctrl.list_tournaments,
-            5: self.tour_ctrl3.manage_players_in_tournament,
-            6: self.tour_ctrl4.start_tournament,
-            7: self.tour_ctrl4.enter_scores_current_round,
-            8: self.tour_ctrl4.start_next_round,
-            9: self.tour_ctrl2.show_leaderboard,
+            1: self.tour_mgmt.create_tournament,
+            2: self.tour_mgmt.modify_tournament,
+            3: self.tour_mgmt.delete_tournament,
+            4: self.tour_mgmt.list_tournaments,
+            5: self.tour_players.manage_players_in_tournament,
+            6: self.tour_rounds.start_tournament,
+            7: self.tour_rounds.enter_scores_current_round,
+            8: self.tour_rounds.start_next_round,
+            9: self.tour_reports.show_leaderboard,
         }
 
         # 2️⃣ Liste des options affichées dans le menu tournois
@@ -212,10 +212,10 @@ class MainController:
         # 1️⃣ Dictionnaire des actions disponibles pour chaque option du menu Rapports
         actions = {
             1: self.player_ctrl.list_players,
-            2: self.tour_ctrl.list_tournaments,
-            3: self.tour_ctrl2.show_tournament_header,
-            4: self.tour_ctrl2.show_tournament_players,
-            5: self.tour_ctrl2.show_all_rounds_and_matches,
+            2: self.tour_mgmt.list_tournaments,
+            3: self.tour_reports.show_tournament_header,
+            4: self.tour_reports.show_tournament_players,
+            5: self.tour_reports.show_all_rounds_and_matches,
         }
 
         # 2️⃣ Liste des options affichées dans le menu Rapports
