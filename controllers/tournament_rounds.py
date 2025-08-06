@@ -11,6 +11,7 @@ Il repose sur TournamentRoundController (hérité de TournamentControllerBase)
 pour la gestion des tournois et la persistance des données.
 """
 
+# from models import tournament
 from views.display_message import DisplayMessage
 from views.console_view import ConsoleView
 from .tournament_controller_base import (
@@ -257,14 +258,15 @@ class TournamentRound(TournamentRoundController):
         self._save(tournament)
 
         # 🔟 Affiche un récapitulatif des scores saisis
-        self._display_scores_recap(recap, num)
+        if tournament.current_round_index < tournament.total_rounds:
+            self._display_scores_recap(recap, num)
 
         # 🏁 Si tous les rounds ont été joués, on clôture le tournoi et annonce le vainqueur
         if tournament.current_round_index >= tournament.total_rounds:
-            self._finaliser_tournoi_si_termine(tournament)
+            self._finalize_tournament_if_finished(tournament)
 
     # ------- Finalisation du tournoi si tous les rounds sont joués -------
-    def _finaliser_tournoi_si_termine(self, tournament):
+    def _finalize_tournament_if_finished(self, tournament):
         """
         Clôture un tournoi arrivé à son terme et détermine le gagnant.
 
@@ -273,6 +275,9 @@ class TournamentRound(TournamentRoundController):
         2. Résultat du duel direct si égalité
         3. Ordre alphabétique en cas d'égalité parfaite
         """
+        # ✅ 🔔 Message clair de fin de tournoi après saisie du dernier score
+        DisplayMessage.display_last_scores_saved()
+
         # 1️⃣ Met à jour le statut du tournoi et sauvegarde
         tournament.status = "terminé"
         self._save(tournament)

@@ -106,7 +106,11 @@ class TournamentPlayers(TournamentPlayersController):
         all_players = sorted(Player.registry, key=lambda p: (p.last_name, p.first_name))
 
         # 2️⃣ Filtre ceux qui ne sont pas déjà inscrits dans le tournoi
-        available = [p for p in all_players if p not in tournament.players]
+        available = [
+            p
+            for p in all_players
+            if p.national_id not in {tp.national_id for tp in tournament.players}
+        ]
 
         # 3️⃣ Si aucun joueur disponible, affiche un message et quitte
         if not available:

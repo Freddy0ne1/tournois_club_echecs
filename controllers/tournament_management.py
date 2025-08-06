@@ -196,12 +196,14 @@ class TournamentManagement(TournamentManagementController):
 
     def list_tournaments(self):
         """Affiche la liste des tournois triée par nom."""
-        # 1️⃣ Trie les tournois par nom (insensible à la casse)
+        # 1️⃣ Recharge les données à jour depuis les fichiers
+        self.reload_tournaments()
+        # 2️⃣ Trie les tournois par nom (insensible à la casse)
         tournaments_sorted = sorted(self._tournaments, key=lambda t: t.name.lower())
-        # 2️⃣ Délégation de l'affichage détaillé à ConsoleView
+        # 3️⃣ Délégation de l'affichage détaillé à ConsoleView
         #    Cette méthode va lister chaque tournoi avec ses infos clés
         ConsoleView.show_tournaments(tournaments_sorted)
-        # 3️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
+        # 4️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
         if not tournaments_sorted:
             DisplayMessage.display_tournament_not_saved()
 

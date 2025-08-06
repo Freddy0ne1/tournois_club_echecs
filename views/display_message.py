@@ -50,7 +50,7 @@ class DisplayMessage:
     @staticmethod
     def display_not_isdigit():
         """Affiche un message indiquant que l'entrée doit être un nombre."""
-        print("🔴  L'entrée doit être un nombre. Veuillez réessayer.")
+        print("🔴  L'entrée doit être un nombre. ")
 
     @staticmethod
     def display_out_of_range():
@@ -564,12 +564,14 @@ class DisplayMessage:
     @staticmethod
     def display_round_in_progress():
         """Affiche un message si un round est en cours."""
-        print("⚠️  Il faut clôturer le round en cours avant d'en démarrer un nouveau.")
+        print("\n⚠️  Il faut clôturer le round en cours avant d'en démarrer un nouveau.")
+        print("💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores.")
 
     @staticmethod
     def display_next_round_started():
         """Affiche un message de succès pour le démarrage du round suivant."""
-        print("🏁 Nouveau round démarré.")
+        print("🏁 Nouveau round démarré.\n")
+        print("💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores.")
 
     @staticmethod
     def display_score_input_title():
@@ -579,10 +581,10 @@ class DisplayMessage:
     @staticmethod
     def display_end_tournament_message(tournament, winner):
         """Affiche un message de fin de tournoi avec les détails."""
-        print(f"\n🏆 Tournoi « {tournament.name} » terminé !")
+        print(f"\n🏆 Tournoi « {tournament.name} » terminé !\n")
         print(f"📍 Lieu : {tournament.place}")
         print(f"📅 Du {tournament.start_date} au {tournament.end_date}")
-        print(f"👥 Participants : {len(tournament.players)}")
+        print(f"👥 Participants : {len(tournament.players)}\n")
         print(f"🎖 Gagnant : {winner.last_name} {winner.first_name}")
 
     @staticmethod
@@ -641,3 +643,9 @@ class DisplayMessage:
     def display_scores_saved_message():
         """Affiche un message de confirmation de l'enregistrement des scores."""
         print("\n💾 Scores enregistrés.")
+        print("💡 Utilisez l'option 8 du menu Tournoi pour démarrer le round suivant.")
+
+    @staticmethod
+    def display_last_scores_saved():
+        """Affiche un message de confirmation des derniers scores enregistrés."""
+        print("\n✅ Derniers scores enregistrés. Le tournoi est maintenant terminé.\n")
