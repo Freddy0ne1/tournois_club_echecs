@@ -11,6 +11,7 @@ Il repose sur TournamentRoundController (hérité de TournamentControllerBase)
 pour la gestion des tournois et la persistance des données.
 """
 
+from views.display_message import DisplayMessage
 from views.console_view import ConsoleView
 from .tournament_controller_base import (
     TournamentControllerBase as TournamentRoundController,
@@ -47,7 +48,7 @@ class TournamentRound(TournamentRoundController):
         4. Affiche les matchs du premier round
         """
         # 1️⃣ Affiche un titre pour signaler l'action
-        print("\n--- Démarrage d'un tournoi ---")
+        DisplayMessage.display_start_tournament_title()
 
         # 2️⃣ Recharge les tournois depuis les fichiers
         self.reload_tournaments()
@@ -57,10 +58,7 @@ class TournamentRound(TournamentRoundController):
 
         # 4️⃣ Vérifie qu'il en reste
         if not non_started:
-            print("\n🔍 Aucun tournoi non démarré trouvé.")
-            print(
-                "⚠️  Créez-en un pour commencer (Menu Tournois -> 1. Créer un tournoi)\n"
-            )
+            DisplayMessage.display_tournament_not_started()
             return
 
         # 5️⃣ Sélection du tournoi à démarrer
@@ -79,9 +77,7 @@ class TournamentRound(TournamentRoundController):
         self._display_rounds(tournament)
 
         # 9️⃣ Indique à l'utilisateur comment saisir les scores
-        print(
-            "\n💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores du round."
-        )
+        DisplayMessage.display_tournament_option_7()
 
     # ------- Vérification des conditions avant de démarrer un tournoi -------
     def _can_start_tournament(self, tournament):
@@ -94,29 +90,23 @@ class TournamentRound(TournamentRoundController):
         """
         # 1️⃣ Vérifie qu'il y a au moins un joueur inscrit
         if not tournament.players:
-            print(
-                f"\n❌ Aucun joueur inscrit pour le tournoi '{tournament.name}' "
-                "(5. Ajouter/Retirer joueurs)."
-            )
+            DisplayMessage.display_message_check_players_in_tournament(tournament)
             return False
 
         # 2️⃣ Vérifie que le nombre de joueurs est pair et au moins 2
         count = len(tournament.players)
         if count < 2 or count % 2 != 0:
-            print("\n❌ Il faut un nombre pair de joueurs (au moins 2).")
+            DisplayMessage.display_message_check_even_number_of_players()
             return False
 
         # 3️⃣ Vérifie que le tournoi n'est pas déjà terminé
         if tournament.status == "terminé":
-            print(f"❌ Impossible : le tournoi '{tournament.name}' est déjà terminé.")
+            DisplayMessage.display_message_check_finished_tournament(tournament)
             return False
 
         # 4️⃣ Vérifie que le tournoi n'est pas déjà en cours
         if tournament.status == "en cours":
-            print(f"\nℹ️  Statut du tournoi '{tournament.name}' : {tournament.status}.")
-            print(
-                "💡 Utilisez l'option 7 du menu Tournoi pour saisir les scores du round."
-            )
+            DisplayMessage.display_check_tournament_status(tournament)
             return False
 
         # 5️⃣ Si toutes les conditions sont réunies, retourne True
@@ -132,9 +122,7 @@ class TournamentRound(TournamentRoundController):
         """
         # 1️⃣ Affiche un message de confirmation de démarrage
         count = len(tournament.players)
-        print(f"\n🏁 Tournoi '{tournament.name}' démarré.\n")
-        print(f"Joueurs inscrits : {count}")
-        print(f"Nombre de rounds : {tournament.total_rounds}\n")
+        DisplayMessage.display_start_tournament_success(tournament, count)
 
         # 2️⃣ Met à jour le statut du tournoi
         tournament.status = "en cours"
@@ -157,15 +145,10 @@ class TournamentRound(TournamentRoundController):
         # 1️⃣ Parcourt tous les rounds du tournoi avec leur index
         for idx, rnd in enumerate(tournament.rounds, 1):
             # 🅰 Affiche le numéro du round
-            print(f"\n🥊 Round {idx} :")
+            DisplayMessage.display_round_details(idx)
 
             # 🅱 Affiche chaque match avec les deux joueurs
-            for m in rnd.matches:
-                p1, p2 = m.players
-                print(
-                    f"{p1.last_name} {p1.first_name} [{p1.national_id}] VS "
-                    f"{p2.last_name} {p2.first_name} [{p2.national_id}]"
-                )
+            DisplayMessage.display_round_matches(rnd)
 
     # -----------------------
     #   ROUND SUIVANT
@@ -185,7 +168,7 @@ class TournamentRound(TournamentRoundController):
         7. Sinon, lance le round suivant et sauvegarde les données
         """
         # 1️⃣ Affiche un titre pour l’action
-        print("\n--- Démarrage du round suivant ---")
+        DisplayMessage.display_start_next_round_title()
 
         # 2️⃣ Recharge les données à jour depuis les fichiers
         self.reload_tournaments()
@@ -198,8 +181,8 @@ class TournamentRound(TournamentRoundController):
 
         # 4️⃣ Si aucun tournoi en cours, message d'information
         if not in_progress:
-            print("\n🔍 Aucun tournoi en cours pour le moment.")
-            print("💡 Démarrez un tournoi avant d'accéder à cette fonctionnalité.\n")
+            DisplayMessage.display_no_tournament_in_progress()
+
             return
 
         # 5️⃣ Sélection du tournoi concerné
@@ -211,9 +194,7 @@ class TournamentRound(TournamentRoundController):
 
         # 6️⃣ Vérifie si le dernier round est clôturé
         if tournament.rounds and not tournament.rounds[-1].end_time:
-            print(
-                "⚠️  Il faut clôturer le round en cours avant d'en démarrer un nouveau."
-            )
+            DisplayMessage.display_round_in_progress()
             return
 
         # 7️⃣ Si tous les rounds ont été joués, on clôture sans message
@@ -227,7 +208,7 @@ class TournamentRound(TournamentRoundController):
         # 8️⃣ Démarre le prochain round
         tournament.start_next_round()
         self._save(tournament)
-        print("🏁 Nouveau round démarré.")
+        DisplayMessage.display_next_round_started()
 
     # -----------------------
     #   SAISIE SCORES
@@ -240,7 +221,7 @@ class TournamentRound(TournamentRoundController):
 
         """
         # 1️⃣ Affiche le titre principal
-        print("\n--- Saisie des scores du round en cours ---")
+        DisplayMessage.display_score_input_title()
 
         # 2️⃣ Recharge les tournois depuis les fichiers présents dans /data/tournaments
         self.reload_tournaments()
@@ -253,8 +234,7 @@ class TournamentRound(TournamentRoundController):
 
         # 4️⃣ Si aucun tournoi en cours, affiche un message d'information et quitte
         if not in_progress:
-            print("\n🔍 Aucun tournoi démarré pour le moment.")
-            print("💡 Utilisez l'option 6 pour démarrer un tournoi.\n")
+            DisplayMessage.display_no_tournament_in_progress()
             return
 
         # 5️⃣ Permet à l'utilisateur de choisir un tournoi en cours
@@ -328,11 +308,7 @@ class TournamentRound(TournamentRoundController):
                 )[0]
 
         # 6️⃣ Affiche le message de fin de tournoi et le classement final
-        print(f"\n🏆 Tournoi « {tournament.name} » terminé !")
-        print(f"📍 Lieu : {tournament.place}")
-        print(f"📅 Du {tournament.start_date} au {tournament.end_date}")
-        print(f"👥 Participants : {len(tournament.players)}")
-        print(f"🎖 Gagnant : {winner.last_name} {winner.first_name}")
+        DisplayMessage.display_end_tournament_message(tournament, winner)
 
         # 7️⃣ Affiche le classement complet des joueurs
         ConsoleView.show_leaderboard(tournament)
@@ -348,13 +324,12 @@ class TournamentRound(TournamentRoundController):
         """
         # 1️⃣ Vérifie si le tournoi n'a pas encore démarré
         if tournament.status == "non démarré":
-            print("\n❌ Impossible : Le tournoi n'a pas encore démarré.")
-            print("💡 Utilisez l'option 6 du menu Tournoi pour démarrer le tournoi.")
+            DisplayMessage.display_no_tournament_started_message()
             return False
 
         # 2️⃣ Vérifie si le tournoi est déjà terminé
         if tournament.status == "terminé":
-            print(f"\nℹ️  Le tournoi '{tournament.name}' est déjà terminé.")
+            DisplayMessage.display_tournament_already_finished(tournament)
             return False
 
         # 3️⃣ Si les conditions sont respectées, on peut saisir les scores
@@ -373,17 +348,10 @@ class TournamentRound(TournamentRoundController):
             return False
 
         # 2️⃣ Affiche un message indiquant que le round est déjà joué
-        print("\n🥊 Round déjà joué.")
-        print("💡 Utilisez l'option 8 du menu Tournoi pour démarrer le round suivant.")
+        DisplayMessage.display_round_already_played()
 
         # 3️⃣ Affiche le récapitulatif des scores du round terminé
-        print(f"\n--- Récapitulatif du round {num} ---")
-        for m in rnd.matches:
-            p1, p2 = m.players
-            s1, s2 = m.scores
-            print(
-                f"{p1.last_name} {p1.first_name} {s1} - {s2} {p2.last_name} {p2.first_name}"
-            )
+        DisplayMessage.display_round_recap(num, rnd)
 
         # 4️⃣ Retourne True pour indiquer que le round est déjà clôturé
         return True
@@ -401,9 +369,7 @@ class TournamentRound(TournamentRoundController):
         Retourne (results, recap)
         """
         # 1️⃣ Affiche le titre et les instructions de saisie
-        print(f"\n===== Score du tournoi {tournament_name} =====")
-        print("📌 Rappel : format 1-0, 0-1, 0.5-0.5 (1 victoire, 0 défaite, 0.5 nul)")
-        print(f"\n🥊 Round {num}\n")
+        DisplayMessage.display_tournament_consigne_title(tournament_name, num)
 
         results = []  # contiendra les scores sous une forme prête pour record_results
         recap = []  # contiendra les données pour affichage final
@@ -428,7 +394,7 @@ class TournamentRound(TournamentRoundController):
                     break
 
                 # 🅲 Message d'erreur si format incorrect
-                print("❌ Exemple valide : 1-0, 0-1 ou 0.5-0.5")
+                DisplayMessage.display_tournament_scores_example()
 
             # 🅳 Ajoute le résultat au tableau results et recap
             results.append((num - 1, i - 1, a, b))
@@ -466,7 +432,7 @@ class TournamentRound(TournamentRoundController):
                 return map(float, s.split("-"))
 
             # 🅲 Affiche un message d'erreur si le format est incorrect
-            print("❌ Exemple valide : 1-0, 0-1 ou 0.5-0.5")
+            DisplayMessage.display_tournament_scores_example()
 
     # ------- Affichage du récapitulatif des scores d’un round -------
     def _display_scores_recap(self, recap, num):
@@ -477,15 +443,7 @@ class TournamentRound(TournamentRoundController):
         - num   : numéro du round (1-based)
         """
         # 1️⃣ Affiche le titre du récapitulatif
-        print(f"\n--- Récapitulatif du round {num} ---")
+        DisplayMessage.display_round_recap_summary(num, recap)
 
-        # 2️⃣ Parcourt la liste recap et affiche chaque score
-        for p1, p2, a, b in recap:
-            print(
-                f"{p1.last_name} {p1.first_name} {a} - {b} "
-                f"{p2.last_name} {p2.first_name}"
-            )
-
-        # 3️⃣ Confirmation de l'enregistrement
-        print("\n💾 Scores enregistrés.")
-        print("💡 Utilisez l'option 8 du menu Tournoi pour démarrer le round suivant.")
+        # 2️⃣ Confirmation de l'enregistrement
+        DisplayMessage.display_scores_saved_message()

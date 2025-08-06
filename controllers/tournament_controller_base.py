@@ -2,19 +2,18 @@
 
 # import csv
 import json
-from datetime import datetime
+
+
 from pathlib import Path
 
-# from models.player import Player
-from models.tournament import Tournament
+from views.display_message import DisplayMessage
 from views.console_view import ConsoleView
+from models.tournament import Tournament
+
 
 # -----------------------
 #   Constantes globales
 # -----------------------
-
-# 1️⃣ Nombre maximal de tentatives autorisées pour une saisie obligatoire
-MAX_ATTEMPTS = 3
 
 # 2️⃣ Définition des chemins principaux du projet
 #    - Path(__file__)  : chemin vers le fichier actuel
@@ -67,84 +66,6 @@ class TournamentControllerBase:
         self._load()
 
     # -----------------------
-    #   SAISIE NON VIDE
-    # -----------------------
-
-    def _input_nonempty(self, prompt):
-        """
-        Demande une saisie non vide à l'utilisateur·rice.
-        Retour :
-        - La chaîne saisie si elle n'est pas vide
-        - None si le nombre maximal d'essais est atteint
-        Étapes :
-        1. Autorise plusieurs tentatives (MAX_ATTEMPTS)
-        2. Refuse les chaînes vides
-        3. Retourne la saisie ou None en cas d'échec
-        """
-        # 1️⃣ Initialisation du compteur de tentatives
-        attempt = 0
-
-        # 2️⃣ Boucle de saisie avec limite MAX_ATTEMPTS
-        while attempt < MAX_ATTEMPTS:
-            # 🅰 Affiche l'invite et récupère la saisie (retire les espaces inutiles)
-            value = input(prompt).strip()
-
-            # 🅱 Si une valeur non vide est saisie, la retourne immédiatement
-            if value:
-                return value
-
-            # 🅲 Sinon, incrémente le compteur et affiche un message d'erreur
-            attempt += 1
-            print(
-                f"\n🔴  Ce champ est obligatoire. "
-                f"({attempt}/{MAX_ATTEMPTS}) Veuillez réessayer.\n"
-            )
-
-        # 3️⃣ Si la limite est atteinte sans succès
-        print("🔁❌ Nombre de tentatives dépassé. Opération annulée.")
-        return None
-
-    # -----------------------
-    #   SAISIE ET VALIDATION D'UNE DATE
-    # -----------------------
-
-    def _input_date(self, prompt):
-        """
-        Demande une date au format jj/mm/aaaa à l'utilisateur·rice.
-        Retour :
-        - Chaîne saisie si la date est valide
-        - None si le nombre maximal d'essais est atteint
-        Étapes :
-        1. Autorise plusieurs tentatives (MAX_ATTEMPTS)
-        2. Vérifie que la saisie respecte le format jj/mm/aaaa
-        3. Retourne la date saisie ou None si échec
-        """
-        # 1️⃣ Initialisation du compteur de tentatives
-        attempt = 0
-
-        # 2️⃣ Boucle jusqu'à atteindre MAX_ATTEMPTS
-        while attempt < MAX_ATTEMPTS:
-            # 🅰 Affiche l'invite et lit la saisie (supprime les espaces)
-            value = input(prompt).strip()
-            try:
-                # 🅱 Vérifie le format de la date (jj/mm/aaaa)
-                datetime.strptime(value, "%d/%m/%Y")
-                # 🅲 Si le format est correct, retourne la valeur saisie
-                return value
-            except ValueError:
-                # 🅳 Incrémente le compteur si le format est incorrect
-                attempt += 1
-                # 🅴 Affiche un message d'erreur avec exemple et numéro d'essai
-                print(
-                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}) "
-                    f"- (ex. 31/12/2025). Veuillez réessayer.\n"
-                )
-
-        # 3️⃣ Si toutes les tentatives échouent, on abandonne
-        print("\n❌ Nombre de tentatives dépassé. Opération annulée.")
-        return None
-
-    # -----------------------
     #   SÉLECTION D'UN TOURNOI
     # -----------------------
 
@@ -167,8 +88,7 @@ class TournamentControllerBase:
 
         # 2️⃣ Si aucun tournoi n'est disponible, informe l'utilisateur et quitte
         if not tournaments:
-            print("\n🔍 Aucun tournoi enregistré pour le moment.")
-            print("⚠️  Créez-en un pour commencer (1. Créer un tournoi)\n")
+            DisplayMessage.display_tournament_not_saved()
             return None
 
         # 3️⃣ Affiche la liste des tournois via ConsoleView (triée par nom)
@@ -180,7 +100,7 @@ class TournamentControllerBase:
 
         # 5️⃣ Vérifie que la saisie est un nombre valide
         if not choice.isdigit():
-            print("\n❌ Veuillez entrer un numéro valide.")
+            DisplayMessage.display_not_isdigit()
             return None
 
         idx = int(choice)
@@ -189,7 +109,7 @@ class TournamentControllerBase:
             return tournaments[idx - 1]
 
         # 7️⃣ Si l'index est hors plage
-        print("\n❌ Numéro hors plage.")
+        DisplayMessage.display_out_of_range()
         return None
 
     # -----------------------
@@ -216,7 +136,7 @@ class TournamentControllerBase:
                 tournament = Tournament.load(file.name)
             except (ValueError, json.JSONDecodeError):
                 # 🅱 En cas d'erreur (JSON invalide ou autre problème), on ignore le fichier
-                print(f"⚠️  Ignoré : impossible de charger {file.name}")
+                DisplayMessage.display_load_tournament_failed(file.name)
             else:
                 # 🅲 Si le fichier est valide, on ajoute le tournoi dans la liste
                 self._tournaments.append(tournament)

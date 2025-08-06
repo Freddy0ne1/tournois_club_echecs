@@ -16,10 +16,11 @@ Ce contrôleur étend TournamentManagementBase afin d'utiliser :
 from datetime import datetime
 
 from models.tournament import Tournament
+from views.display_message import DisplayMessage
 from views.console_view import ConsoleView
+from utils.input_utils import InputUtils, MAX_ATTEMPTS
 from .tournament_controller_base import (
     TournamentControllerBase as TournamentManagementController,
-    MAX_ATTEMPTS,
     DATA_DIR,
 )
 
@@ -36,7 +37,7 @@ class TournamentManagement(TournamentManagementController):
     - Supprimer un tournoi existant
 
     Cette classe s'appuie sur TournamentManagementBase pour :
-    - Les méthodes de saisie utilisateur validée (_input_nonempty, _input_date, _choose)
+    - Les méthodes de saisie utilisateur validée (input_nonempty, _input_date, _choose)
     - La persistance des données (_load, _save)
     """
 
@@ -58,7 +59,7 @@ class TournamentManagement(TournamentManagementController):
         """
 
         # 1️⃣ Affiche un en-tête indiquant la création d'un tournoi
-        print("\n=== Création d'un tournoi ===\n")
+        DisplayMessage.display_create_tournament_title()
 
         # 2️⃣ Demande le nom du tournoi (obligatoire)
         name = self._ask_required_field("Nom du tournoi : ")
@@ -101,12 +102,12 @@ class TournamentManagement(TournamentManagementController):
     def _ask_required_field(self, prompt):
         """
         Demande un champ obligatoire à l'utilisateur·rice.
-        - Utilise _input_nonempty pour s'assurer que la réponse n'est pas vide.
+        - Utilise input_nonempty pour s'assurer que la réponse n'est pas vide.
         - Retourne la valeur saisie ou None si l'utilisateur abandonne après
         plusieurs tentatives.
         """
-        # 1️⃣ Appelle _input_nonempty avec le message d'invite fourni
-        return self._input_nonempty(prompt)
+        # 1️⃣ Appelle input_nonempty avec le message d'invite fourni
+        return InputUtils.input_nonempty(prompt)
 
     # ------- Demande et validation d'une date -------
     def _ask_date(self, prompt):
@@ -116,7 +117,7 @@ class TournamentManagement(TournamentManagementController):
         - Retourne la date saisie (chaîne) ou None si l'utilisateur abandonne.
         """
         # 1️⃣ Appelle _input_date pour effectuer la saisie et la validation
-        return self._input_date(prompt)
+        return InputUtils.input_date(prompt)
 
     # ------- Demande et validation d'une date de fin -------
     def _ask_end_date(self, prompt, start_date):
@@ -130,7 +131,7 @@ class TournamentManagement(TournamentManagementController):
         for attempt in range(1, MAX_ATTEMPTS + 1):
 
             # 🅰 Demande une saisie de date en utilisant _input_date
-            saisie = self._input_date(prompt)
+            saisie = InputUtils.input_date(prompt)
             if saisie is None:  # 🅱 Annulation directe si la saisie échoue
                 return None
 
@@ -143,12 +144,10 @@ class TournamentManagement(TournamentManagementController):
                 return saisie  # 🅰 Retourne la date valide
 
             # 4️⃣ Si la saisie est incorrecte, affiche un message d'erreur et réessaie
-            print(
-                f"\n❌ La date de fin doit être ≥ date de début ({attempt}/{MAX_ATTEMPTS}).\n"
-            )
+            DisplayMessage.display_error_tournament_date(attempt, max_attempts=3)
 
         # 5️⃣ Trop d'échecs → abandon de l'opération
-        print("\n❌ Nombre de tentatives dépassé. Opération annulée.")
+        DisplayMessage.display_abort_operation()
         return None
 
     # ------- Demande du nombre de tours pour un tournoi -------
@@ -173,7 +172,7 @@ class TournamentManagement(TournamentManagementController):
                 return int(nb)
 
             # 4️⃣ Sinon, message d'erreur et on redemande
-            print("Entrez un entier positif ou laissez vide pour 4.")
+            DisplayMessage.display_tournament_rounds()
 
     # ------- Sauvegarde et confirmation après création d'un tournoi -------
     def _save_and_confirm(self, tournament):
@@ -186,15 +185,10 @@ class TournamentManagement(TournamentManagementController):
         self._save(tournament)
 
         # 2️⃣ Affiche une confirmation visuelle de création réussie
-        print("\n✅ Tournoi créé.\n")
+        DisplayMessage.display_tournament_created_message()
 
         # 3️⃣ Affiche un récapitulatif clair des données du tournoi
-        print("--- Informations du tournoi créé ---\n")
-        print(f"Nom              : {tournament.name}")
-        print(f"Lieu             : {tournament.place}")
-        print(f"Dates            : {tournament.start_date} → {tournament.end_date}")
-        print(f"Description      : {tournament.description}")
-        print(f"Nombre de tours  : {tournament.total_rounds}")
+        DisplayMessage.display_tournament_info_details(tournament)
 
     # -----------------------
     #   LISTE TOURNOI
@@ -209,10 +203,7 @@ class TournamentManagement(TournamentManagementController):
         ConsoleView.show_tournaments(tournaments_sorted)
         # 3️⃣ Si aucun tournoi n'est enregistré, affiche un message approprié
         if not tournaments_sorted:
-            print("\n🔍 Aucun tournoi enregistré pour le moment.")
-            print(
-                "⚠️  Créez-en un pour commencer (Menu Tournois -> 1. Créer un tournoi)\n"
-            )
+            DisplayMessage.display_tournament_not_saved()
 
     # -----------------------
     #   MODIFICATION TOURNOI
@@ -228,7 +219,7 @@ class TournamentManagement(TournamentManagementController):
         4. Sauvegarde et confirme la mise à jour
         """
         # 1️⃣ Affiche le titre pour signaler l'entrée en mode modification
-        print("\n--- Modification d'un tournoi ---")
+        DisplayMessage.display_update_tournament_title()
 
         # 2️⃣ Sélection du tournoi à modifier via un menu
         tournament = self._choose("modifier")
@@ -275,16 +266,13 @@ class TournamentManagement(TournamentManagementController):
         - Indique que laisser un champ vide conserve la valeur actuelle.
         """
         # 1️⃣ Affiche le titre avec le nom du tournoi
-        print(f"\n--- Infos actuelles du tournoi '{tournament.name}' ---")
+        DisplayMessage.display_current_tournament_info()
 
         # 2️⃣ Affiche les détails principaux du tournoi
-        print(f"Lieu             : {tournament.place}")
-        print(f"Dates            : {tournament.start_date} → {tournament.end_date}")
-        print(f"Description      : {tournament.description}")
-        print(f"Nombre de tours  : {tournament.total_rounds}")
+        DisplayMessage.display_tournament_updated_details(tournament)
 
         # 3️⃣ Rappel pour l'utilisateur : un champ vide garde l'ancienne valeur
-        print("\nℹ️  Laisser vide pour conserver la valeur actuelle.\n")
+        DisplayMessage.display_tournament_consigne()
 
     # ------- Édition d’un champ texte avec valeur actuelle proposée -------
     def _edit_text_field(self, label, current):
@@ -325,7 +313,7 @@ class TournamentManagement(TournamentManagementController):
                 if min_date:
                     min_val = datetime.strptime(min_date, "%d/%m/%Y")
                     if date_val < min_val:
-                        print("❌ La date doit être ≥ à la date de début.")
+                        DisplayMessage.display_tournament_end_date_error()
                         continue  # Redemande la saisie
 
                 # 4️⃣ Retourne la nouvelle date valide
@@ -333,7 +321,7 @@ class TournamentManagement(TournamentManagementController):
 
             except ValueError:
                 # 5️⃣ En cas de format invalide, affiche un exemple et recommence
-                print("❌ Format invalide. Exemple : 31/12/2025")
+                DisplayMessage.display_error_format_date()
 
     # ------- Édition du nombre de tours avec validation -------
     def _edit_rounds(self, current):
@@ -356,7 +344,7 @@ class TournamentManagement(TournamentManagementController):
                 return int(nb)
 
             # 4️⃣ Message d'erreur si la saisie est invalide et relance la demande
-            print("Entrez un entier positif ou laissez vide pour conserver.")
+            DisplayMessage.display_tournament_update_rounds()
 
     # ------- Sauvegarde et confirmation après création -------
     def _confirm_and_save(self, tournament):
@@ -371,14 +359,10 @@ class TournamentManagement(TournamentManagementController):
         self._save(tournament)
 
         # 2️⃣ Message de confirmation
-        print("\n✅ Mise à jour effectuée.\n")
+        DisplayMessage.display_tournament_updated_message()
 
         # 3️⃣ Affiche les informations actualisées du tournoi
-        print(f"--- Nouvelles infos du tournoi '{tournament.name}' ---\n")
-        print(f"Lieu             : {tournament.place}")
-        print(f"Dates            : {tournament.start_date} → {tournament.end_date}")
-        print(f"Description      : {tournament.description}")
-        print(f"Nombre de tours  : {tournament.total_rounds}")
+        DisplayMessage.display_tournament_info_details(tournament)
 
     # -----------------------
     #   SUPPRESSION TOURNOI
@@ -388,7 +372,7 @@ class TournamentManagement(TournamentManagementController):
     def delete_tournament(self):
         """Supprime un tournoi existant."""
         # 1️⃣ Affichage de l'en‑tête de suppression
-        print("\n--- Suppression d'un tournoi ---")
+        DisplayMessage.display_delete_tournament_title()
 
         # 2️⃣ Sélection du tournoi à supprimer
         #    _choose("supprimer") affiche la liste et renvoie l'objet ou None
@@ -413,6 +397,4 @@ class TournamentManagement(TournamentManagementController):
         self._tournaments.remove(tournament)
 
         # 7️⃣ Message de confirmation final
-        print(
-            f"\n✅ Le tournoi '{tournament.name}' - {tournament.place} a été supprimé."
-        )
+        DisplayMessage.display_tournament_deleted(tournament)

@@ -11,6 +11,7 @@ Il s'appuie sur TournamentControllerBase pour :
 - Sauvegarder l'état du tournoi (_save)
 """
 
+from views.display_message import DisplayMessage
 from models.player import Player
 from .tournament_controller_base import (
     TournamentControllerBase as TournamentPlayersController,
@@ -36,14 +37,13 @@ class TournamentPlayers(TournamentPlayersController):
         2. Recharge tous les tournois existants depuis le disque
         3. Ne conserve que ceux qui sont "non démarré" et les trie A → Z
         4. Demande à l'utilisateur de choisir un tournoi à modifier
-        5. Si le tournoi est déjà démarré, empêche toute modification
-        6. Affiche une boucle d'actions possibles :
+        5. Affiche une boucle d'actions possibles :
         - Ajouter des joueurs
         - Retirer des joueurs
         - Quitter la gestion
         """
         # 1️⃣ Affiche un titre pour introduire la section
-        print("\n--- Gestion des joueurs d'un tournoi ---")
+        DisplayMessage.display_manage_players_title()
 
         # 2️⃣ Recharge la liste des tournois depuis le dossier /data/tournaments
         self.reload_tournaments()
@@ -59,12 +59,7 @@ class TournamentPlayers(TournamentPlayersController):
         if not tournament:  # ❌ Annule si aucun tournoi n’est sélectionné
             return
 
-        # 5️⃣ Vérifie que le tournoi sélectionné n’a pas encore été lancé
-        if tournament.status != "non démarré":
-            print("\n❌ Impossible après démarrage.")
-            return
-
-        # 6️⃣ Boucle principale : propose d’ajouter, retirer ou quitter
+        # 5️⃣ Boucle principale : propose d’ajouter, retirer ou quitter
         while True:
             # 🅰 Affiche les infos du tournoi + menu d’options
             self._show_tournament_summary(tournament)
@@ -87,21 +82,13 @@ class TournamentPlayers(TournamentPlayersController):
         et présente le menu de gestion des joueurs (ajout/retrait).
         """
         # 1️⃣ Affiche un titre visuel
-        print("\n🏆 Informations du tournoi :\n")
+        DisplayMessage.display_tournament_title()
 
         # 2️⃣ Affiche les informations détaillées du tournoi
-        print(f"Nom                : {tournament.name}")
-        print(f"Lieu               : {tournament.place}")
-        print(f"Dates              : {tournament.start_date} → {tournament.end_date}")
-        print(f"Description        : {tournament.description}")
-        print(f"Nombre de tours    : {tournament.total_rounds}")
-        print(f"Joueurs inscrits   : {len(tournament.players)}\n")
+        DisplayMessage.display_tournament_info(tournament)
 
         # 3️⃣ Affiche les options disponibles pour la gestion des joueurs
-        print("--- Ajouter ou retirer joueur(s) ---")
-        print("1. Ajouter joueur(s)")
-        print("2. Retirer joueur(s)")
-        print("0. Retour\n")
+        DisplayMessage.display_manage_players_menu()
 
     # -----------------------
     #   AJOUTER JOUEUR(S)
@@ -123,7 +110,7 @@ class TournamentPlayers(TournamentPlayersController):
 
         # 3️⃣ Si aucun joueur disponible, affiche un message et quitte
         if not available:
-            print("\n👤 Aucun joueur disponible.")
+            DisplayMessage.display_not_player()
             return
 
         # 4️⃣ Affiche la liste des joueurs disponibles avec un numéro
@@ -141,11 +128,7 @@ class TournamentPlayers(TournamentPlayersController):
     # ------- Affichage de la liste des joueurs disponibles pour ajout -------
     def _display_available_players(self, available):
         """Affiche la liste numérotée des joueurs disponibles à l'ajout."""
-        print("\n--- Joueurs disponibles à l'ajout ---")
-        for i, p in enumerate(available, 1):
-            print(
-                f"{i}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
-            )
+        DisplayMessage.display_player_available(available)
 
     # ------- Traitement de la saisie des joueurs sélectionnés et ajout au tournoi -------
     def _process_selected_players(self, nums, available, tournament):
@@ -163,7 +146,7 @@ class TournamentPlayers(TournamentPlayersController):
 
             # 🅱 Ignore les doublons de saisie
             if token in seen:
-                print(f"⚠️  Numéro {token} dupliqué, ignoré.")
+                DisplayMessage.display_player_duplicate_warning(token)
                 continue
             seen.add(token)
 
@@ -174,7 +157,7 @@ class TournamentPlayers(TournamentPlayersController):
                 tournament.players.append(p)  # Ajoute le joueur au tournoi
                 added.append(p)
             else:
-                print(f"⚠️  Le numéro {token} n'est pas valide.")
+                DisplayMessage.display_player_not_added(token)
 
         return added
 
@@ -189,12 +172,10 @@ class TournamentPlayers(TournamentPlayersController):
             self._save(tournament)
 
             # 🅲 Affiche les joueurs qui viennent d'être ajoutés
-            print("\n👤 Joueur(s) ajouté(s) :")
-            for p in added:
-                print(f"- {p.last_name} {p.first_name} [{p.national_id}]")
+            DisplayMessage.display_player_added(added)
         else:
             # 9️⃣ Si aucun ajout n'a eu lieu
-            print("\n👤 Aucun nouveau joueur ajouté.")
+            DisplayMessage.display_player_not_added_players()
 
     # -----------------------
     #   RETIRER JOUEUR(S)
@@ -212,7 +193,7 @@ class TournamentPlayers(TournamentPlayersController):
 
         # 1️⃣ Vérifie si des joueurs sont inscrits
         if not tournament.players:
-            print("\n👤 Aucun joueur inscrit.")
+            DisplayMessage.display_no_players_in_tournament()
             return
 
         # 2️⃣ Trie et affiche les joueurs inscrits
@@ -221,7 +202,7 @@ class TournamentPlayers(TournamentPlayersController):
         # 3️⃣ Demande la liste des joueurs à retirer
         to_remove = self._ask_players_to_remove(tournament)
         if not to_remove:
-            print("\n❌ Aucun numéro valide.")
+            DisplayMessage.display_no_valid_number()
             return
 
         # 4️⃣ Confirmation et suppression
@@ -234,11 +215,7 @@ class TournamentPlayers(TournamentPlayersController):
     def _display_registered_players(self, tournament):
         """Trie et affiche la liste numérotée des joueurs inscrits au tournoi."""
         tournament.players.sort(key=lambda p: (p.last_name, p.first_name))
-        print("\n--- Joueurs inscrits ---")
-        for i, p in enumerate(tournament.players, 1):
-            print(
-                f"{i}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
-            )
+        DisplayMessage.display_registered_players_list(tournament)
 
     # ------- Sélection des joueurs à retirer d’un tournoi -------
     def _ask_players_to_remove(self, tournament):
@@ -270,11 +247,9 @@ class TournamentPlayers(TournamentPlayersController):
         if removed:
             tournament.players.sort(key=lambda p: (p.last_name, p.first_name))
             self._save(tournament)
-            print("\n👤 Joueur(s) retiré(s) :")
-            for p in removed:
-                print(f"- {p.last_name} {p.first_name} [{p.national_id}]")
+            DisplayMessage.display_finalize_player_removal(removed)
         else:
-            print("\n👤 Aucune suppression effectuée.")
+            DisplayMessage.display_player_not_removed()
 
     # ------- Liste des joueurs disponibles (non inscrits) pour un tournoi -------
     def _available_players(self, tournament):
@@ -299,13 +274,7 @@ class TournamentPlayers(TournamentPlayersController):
         """
 
         # 1️⃣ Affiche le titre fourni
-        print(f"\n--- {title} ---")
-
-        # 2️⃣ Parcourt la liste des joueurs et affiche chaque joueur avec un numéro
-        for i, p in enumerate(players, 1):
-            print(
-                f"{i}. {p.last_name} {p.first_name} | {p.national_id} | {p.birth_date}"
-            )
+        DisplayMessage.display_registered_players_title(players, title)
 
     # ------- Analyse et validation des numéros de joueurs saisis -------
     def _parse_player_selection(self, nums, available):
@@ -328,7 +297,7 @@ class TournamentPlayers(TournamentPlayersController):
             # 3️⃣ Vérifie que la saisie est bien un nombre et pas déjà vue
             if not token.isdigit() or token in seen:
                 if token in seen:
-                    print(f"⚠️ Numéro {token} dupliqué, ignoré.")
+                    DisplayMessage.display_player_duplicate_warning(token)
                 continue
 
             # 4️⃣ Ajoute le numéro dans l'ensemble pour éviter les doublons
@@ -339,7 +308,7 @@ class TournamentPlayers(TournamentPlayersController):
             if 0 <= idx < len(available):
                 selected.append(available[idx])
             else:
-                print(f"⚠️ Le numéro {token} n'est pas valide.")
+                DisplayMessage.display_player_not_added(token)
 
         # 6️⃣ Retourne la liste des joueurs sélectionnés valides
         return selected

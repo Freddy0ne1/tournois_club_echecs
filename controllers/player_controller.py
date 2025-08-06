@@ -4,15 +4,11 @@ Contrôleur pour gérer les joueurs.
 
 import re
 from datetime import datetime
+from views.display_message import DisplayMessage
 from views.console_view import ConsoleView
 from models.player import Player
+from utils.input_utils import InputUtils, MAX_ATTEMPTS
 
-# -----------------------
-#   LIMITE DE TENTATIVES
-# -----------------------
-
-# 1️⃣ Nombre maximal de tentatives autorisées pour une saisie obligatoires
-MAX_ATTEMPTS = 3
 
 # -----------------------
 #   CONTROLEUR JOUEURS
@@ -36,79 +32,6 @@ class PlayerController:
     #   - delete_player() : suppression d'un joueur
     #   - list_players()  : affichage de tous les joueurs
     #   - search_player() : recherche d'un joueur par ID, nom, etc.
-
-    # -----------------------
-    #   SAISIE NON VIDE
-    # -----------------------
-
-    def _input_nonempty(self, prompt):
-        """
-        Demande une saisie non vide à l'utilisateur·rice.
-        Étapes :
-        1. Affiche un message (prompt) pour demander une saisie
-        2. Vérifie que la saisie n'est pas vide
-        3. Réessaie jusqu'à MAX_ATTEMPTS
-        4. Retourne la valeur saisie ou None si échec
-        """
-        # 1️⃣ Initialisation du compteur de tentatives
-        attempt = 0
-
-        # 2️⃣ Boucle : répète la demande jusqu'à atteindre MAX_ATTEMPTS
-        while attempt < MAX_ATTEMPTS:
-            # 🅰 Affiche le prompt et récupère la saisie utilisateur (supprime espaces inutiles)
-            value = input(prompt).strip()
-
-            # 🅱 Si l'utilisateur a saisi une valeur non vide, on la retourne immédiatement
-            if value:
-                return value
-
-            # 🅲 Sinon, incrémente le compteur et affiche un message d'erreur
-            attempt += 1
-            print(
-                f"\n🔴  Ce champ est obligatoire. "
-                f"({attempt}/{MAX_ATTEMPTS}). Réessayez.\n"
-            )
-
-        # 3️⃣ Si le nombre maximum de tentatives est atteint, on abandonne
-        print("❌ Nombre de tentatives dépassé. Opération abandonnée.")
-        return None
-
-    # -----------------------
-    #   SAISIE ET VALIDATION D'UNE DATE
-    # -----------------------
-
-    def _input_date(self, prompt_text):
-        """
-        Demande une date à l'utilisateur·rice au format jj/mm/aaaa.
-        Étapes :
-        1. Affiche un message (prompt) pour demander une date
-        2. Vérifie que la saisie respecte le format jj/mm/aaaa
-        3. Réessaie jusqu'à MAX_ATTEMPTS si la saisie est incorrecte
-        4. Retourne la date saisie ou None si échec
-        """
-        # 1️⃣ Initialisation du compteur de tentatives
-        attempt = 0
-
-        # 2️⃣ Boucle : répète la demande jusqu'à atteindre MAX_ATTEMPTS
-        while attempt < MAX_ATTEMPTS:
-            # 🅰 Affiche le prompt et récupère la saisie utilisateur (supprime espaces inutiles)
-            date_str = input(prompt_text).strip()
-            try:
-                # 🅱 Tente de convertir la saisie au format jj/mm/aaaa
-                datetime.strptime(date_str, "%d/%m/%Y")
-                # 🅲 Si la conversion réussit, retourne immédiatement la date saisie
-                return date_str
-            except ValueError:
-                # 🅳 Sinon, incrémente le compteur et affiche un message d'erreur
-                attempt += 1
-                print(
-                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). "
-                    f"Exemple attendu : 31/12/1990\n"
-                )
-
-        # 3️⃣ Si le nombre maximal d'essais est atteint, abandonne
-        print("🔁❌ Nombre de tentatives dépassé. Opération abandonnée.")
-        return None
 
     # -----------------------
     #   TRI ALPHABÉTIQUE DES JOUEURS
@@ -155,7 +78,7 @@ class PlayerController:
 
         # 2️⃣ Si la liste est vide, affiche un message et retourne None
         if not players:
-            print("🔍 Aucun joueur disponible.")
+            DisplayMessage.display_not_player()
             return None
 
         # 3️⃣ Affiche les joueurs numérotés grâce à la ConsoleView
@@ -166,7 +89,7 @@ class PlayerController:
 
         # 5️⃣ Vérifie que la saisie est un nombre valide
         if not choice.isdigit():
-            print("❌ Entrée invalide. Utilisez un numéro.")
+            DisplayMessage.display_not_isdigit()
             return None
 
         # 6️⃣ Convertit la saisie en entier et vérifie si l'index est dans la plage
@@ -176,7 +99,7 @@ class PlayerController:
             return players[idx - 1]
 
         # 8️⃣ Sinon, avertit que le numéro est hors plage et retourne None
-        print("❌ Indice hors plage.")
+        DisplayMessage.display_out_of_range()
         return None
 
     # -----------------------
@@ -197,7 +120,7 @@ class PlayerController:
         7. Affiche un récapitulatif des informations saisies
         """
         # 1️⃣ Affiche un titre pour indiquer la création d'un joueur
-        print("\n--- Création d'un nouveau joueur ---\n")
+        DisplayMessage.display_create_title()
 
         # 2️⃣ Demande l'identifiant national unique
         national_id = self._ask_unique_national_id()
@@ -215,7 +138,7 @@ class PlayerController:
             return
 
         # 5️⃣ Demande la date de naissance et vérifie son format
-        birth_date = self._input_date("Date de naissance (jj/mm/aaaa) : ")
+        birth_date = InputUtils.input_date("Date de naissance (jj/mm/aaaa) : ")
         if birth_date is None:
             return
 
@@ -241,7 +164,7 @@ class PlayerController:
         for attempt in range(1, MAX_ATTEMPTS + 1):
 
             # 🅰 Demande une saisie obligatoire (non vide)
-            national_id = self._input_nonempty(
+            national_id = InputUtils.input_nonempty(
                 "Identifiant national (AB+5 chiffres) : "
             )
             # 🅱 Si l'utilisateur abandonne, on quitte immédiatement
@@ -253,22 +176,19 @@ class PlayerController:
 
             # 2️⃣ Vérification du format attendu : "AB" + 5 chiffres
             if not re.match(r"AB\d{5}$", national_id):
-                print(
-                    f"\n❌ Format invalide ({attempt}/{MAX_ATTEMPTS}). "
-                    f"L'ID doit commencer par 'AB' ensuite 5 chiffres (ex : AB12345)\n"
-                )
+                DisplayMessage.display_not_re_match(attempt, MAX_ATTEMPTS)
                 continue
 
             # 3️⃣ Vérification que cet identifiant n'existe pas déjà dans le registre
             if any(p.national_id == national_id for p in Player.registry):
-                print(f"\n❌ Identifiant déjà utilisé ({attempt}/{MAX_ATTEMPTS}).\n")
+                DisplayMessage.display_already_exists(attempt, MAX_ATTEMPTS)
                 continue
 
             # 4️⃣ Si format et unicité sont valides, on retourne l'ID
             return national_id
 
         # 5️⃣ Si toutes les tentatives ont échoué
-        print("❌ Échec de la saisie de l'ID. Annulation.")
+        DisplayMessage.display_abort_operation()
         return None
 
     # ------- Demande et formatage du nom ou prénom d'un joueur -------
@@ -283,7 +203,7 @@ class PlayerController:
         3. Retourne la valeur formatée ou None si abandon
         """
         # 1️⃣ Demande une saisie obligatoire
-        name = self._input_nonempty(prompt)
+        name = InputUtils.input_nonempty(prompt)
 
         # 2️⃣ Si l'utilisateur abandonne, on retourne None
         if name is None:
@@ -308,16 +228,13 @@ class PlayerController:
         3. Affiche les détails : date de naissance et identifiant national
         """
         # 1️⃣ Affiche un message confirmant la création du joueur
-        print("\n✅ Joueur créé avec succès !\n")
+        DisplayMessage.display_player_created()
 
         # 2️⃣ Affiche un titre clair avec le nom et le prénom du joueur
-        print("--- Informations du joueur créé ---\n")
+        DisplayMessage.display_player_info_title()
 
         # 3️⃣ Affiche les informations détaillées
-        print(f"Nom               : {player.last_name}")
-        print(f"Prénom            : {player.first_name}")
-        print(f"Date de naissance : {player.birth_date}")
-        print(f"Identifiant       : {player.national_id}")
+        DisplayMessage.display_player_info(player)
 
     # -----------------------
     #   MODIFICATION JOUEUR
@@ -337,7 +254,7 @@ class PlayerController:
         7. Retourne le joueur mis à jour
         """
         # 1️⃣ Affiche un titre pour indiquer qu'on entre en mode modification
-        print("\n--- Modification d'un joueur ---\n")
+        DisplayMessage.display_update_player_title()
 
         # 2️⃣ Demande à l'utilisateur de choisir le joueur à modifier
         player = self._choose_player("modifier")
@@ -350,7 +267,7 @@ class PlayerController:
         # 4️⃣ Mise à jour des champs du joueur (cette méthode renvoie False si annulartion)
         success = self._update_player_fields(player)
         if not success:  # 🅱 Si l'utilisateur abandonne la modification
-            print("❌ Modification annulée.")
+            DisplayMessage.display_player_not_updated()
             return None  # Abandonne la modification
 
         # 5️⃣ Demande et met à jour les champs modifiables
@@ -376,17 +293,14 @@ class PlayerController:
             un champ vide permet de conserver la valeur existante
         """
         # 1️⃣ Affiche un titre contextualisé (actuelles ou nouvelles infos)
-        print(f"\n--- Informations {label} du joueur ---")
+        DisplayMessage.display_current_player_info(label)
 
         # 2️⃣ Affiche les informations principales
-        print(f"Nom               : {player.last_name}")
-        print(f"Prénom            : {player.first_name}")
-        print(f"ID                : {player.national_id}")
-        print(f"Date de naissance : {player.birth_date}")
+        DisplayMessage.display_player_info_details(player)
 
         # 3️⃣ Si on affiche les infos actuelles, ajoute une note explicative
         if label == "actuelles":
-            print("\nℹ️  Laisser vide pour conserver la valeur actuelle.\n")
+            DisplayMessage.display_consigne()
 
     # ------- Mise à jour des champs d'un joueur existant (nom, prénom, date de naissance) -------
     def _update_player_fields(self, player):
@@ -428,7 +342,7 @@ class PlayerController:
                 break
             except ValueError:
                 # 🅲 Si le format est incorrect, on indique l'exemple attendu
-                print("❌ Format invalide. Exemple : 31/12/1990")
+                DisplayMessage.display_error_format_date()
 
     # ------- Confirmation et affichage des informations mises à jour d'un joueur -------
     def _confirm_player_update(self, player):
@@ -440,16 +354,13 @@ class PlayerController:
         3. Affiche les nouvelles informations du joueur (nom, prénom, date, ID)
         """
         # 1️⃣ Affiche un message confirmant que la mise à jour a bien été effectuée
-        print("\n✅ Mise à jour effectuée.\n")
+        DisplayMessage.display_player_updated()
 
         # 2️⃣ Affiche un titre pour introduire les nouvelles informations
-        print("--- Nouvelles informations du joueur ---\n")
+        DisplayMessage.display_player_new_info_title()
 
         # 3️⃣ Affiche les informations actualisées du joueur
-        print(
-            f"{player.last_name} {player.first_name} - {player.birth_date} "
-            f"- ID: {player.national_id}"
-        )
+        DisplayMessage.display_player_new_info_details(player)
 
     # -----------------------
     #   SUPPRESSION JOUEUR
@@ -467,7 +378,7 @@ class PlayerController:
         6. Affiche un message de succès ou d'annulation
         """
         # 1️⃣ Affiche un titre pour entrer en mode suppression
-        print("\n--- Suppression d'un joueur ---\n")
+        DisplayMessage.display_delete_player_title()
 
         # 2️⃣ Sélectionne un joueur grâce à _choose_player
         player = self._choose_player("supprimer")
@@ -492,10 +403,10 @@ class PlayerController:
             Player.save_all()
 
             # 6️⃣ Message confirmant la suppression
-            print(f"\n✅ {player.first_name} {player.last_name} a été supprimé.\n")
+            DisplayMessage.display_player_deleted(player)
         else:
             # 7️⃣ Si l'utilisateur annule, afficher un message approprié
-            print("❌ Suppression annulée.\n")
+            DisplayMessage.display_player_not_deleted()
 
     # -----------------------
     #   RECHERCHE
@@ -513,7 +424,7 @@ class PlayerController:
         5. Sinon, affiche un message indiquant qu'il n'y a aucun résultat
         """
         # 1️⃣ Affiche un titre pour signaler le début de la recherche
-        print("\n--- Recherche de joueurs ---\n")
+        DisplayMessage.display_search_title()
 
         # 2️⃣ Demande le terme de recherche et le met en minuscules
         term = input("Recherche : ").lower().strip()
@@ -537,7 +448,7 @@ class PlayerController:
             ConsoleView.show_players(results)
         else:
             # 5️⃣ Aucun résultat trouvé : affiche un message explicite
-            print("🔍  Aucun résultat trouvé.")
+            DisplayMessage.display_player_not_found()
 
     # -----------------------
     #   LISTER JOUEUR
@@ -558,13 +469,8 @@ class PlayerController:
 
         # 2️⃣ Si aucun joueur n'est enregistré, affiche un message et sort
         if not players:
-            print("\n🔍  Aucun joueur enregistré.\n")
-            print("⚠️  Veuillez d'abord créer des joueurs (1. Créer un joueur).\n")
-
+            DisplayMessage.display_no_players_found()
             return
 
         # 3️⃣ Affiche la liste des joueurs avec numérotation et détails
         ConsoleView.show_players(players)
-
-        # 4️⃣ Ajoute un saut de ligne final pour l'aération
-        print()

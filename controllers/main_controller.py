@@ -4,13 +4,14 @@ Contrôleur principal pour démarrer l'application.
 
 from models.player import Player
 
+from views.display_message import DisplayMessage
+
 from views.console_view import ConsoleView
 from controllers.tournament_management import TournamentManagement
 from controllers.tournament_players import TournamentPlayers
 from controllers.player_controller import PlayerController
 from controllers.tournament_reports import TournamentReports
 from controllers.tournament_rounds import TournamentRound
-
 from .tournament_controller_base import TournamentControllerBase
 
 
@@ -80,7 +81,7 @@ class MainController:
 
             # 🅱 Si l'utilisateur choisit de quitter, on sort de la boucle
             if choice == 4:
-                print("\nAu revoir !")
+                DisplayMessage.display_goodbye()
                 break
 
             # 🅲 Exécute l'action correspondant au choix si elle existe

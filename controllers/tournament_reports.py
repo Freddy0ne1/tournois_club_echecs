@@ -6,6 +6,7 @@ Affiche les classements, rapports et propose l'export des données.
 import csv
 from models.player import Player
 from views.console_view import ConsoleView
+from views.display_message import DisplayMessage
 from .tournament_controller_base import (
     TournamentControllerBase as TournamentReportsController,
     EXPORT_DIR,
@@ -46,12 +47,10 @@ class TournamentReports(TournamentReportsController):
 
         # 3️⃣ Si aucun tournoi éligible, affiche un message et quitte
         if not eligible:
-            print("\n🔍 Aucun tournoi démarré ou terminé pour le moment.")
-            print("💡 Démarrez un tournoi pour pouvoir consulter son classement.\n")
+            DisplayMessage.display_leaderboard_not_eligible()
             return
 
         # 4️⃣ Titre et sélection du tournoi concerné
-        print("\n--- Affichage du classement ---")
         tournament = self._choose("consulter le classement", tournament_list=eligible)
         if not tournament:
             return
@@ -81,7 +80,7 @@ class TournamentReports(TournamentReportsController):
 
         # 2️⃣ Si aucun joueur n'est inscrit à aucun tournoi
         if not ids:
-            print("\nAucun joueur inscrit à un tournoi.\n")
+            DisplayMessage.display_no_players_registered()
             return
 
         # 3️⃣ Construit une liste des joueurs correspondant aux IDs collectés
@@ -91,7 +90,7 @@ class TournamentReports(TournamentReportsController):
         registered.sort(key=lambda p: (p.last_name, p.first_name))
 
         # 5️⃣ Affiche la liste via la vue console
-        print("\n--- Joueurs inscrits à un tournoi ---")
+        DisplayMessage.display_players_tournament_title()
         ConsoleView.show_players(registered)
 
         # 6️⃣ Prépare les données pour un export éventuel
@@ -111,9 +110,10 @@ class TournamentReports(TournamentReportsController):
         - L'objet Tournament choisi ou None si annulation ou erreur.
         """
 
-        # 1️⃣ Appelle la méthode _choose avec l'action spécifiée.
-        #    _choose se charge d'afficher la liste des tournois et de lire la saisie.
-        # 2️⃣ Retourne directement le tournoi sélectionné (ou None).
+        # 1️⃣ Recharge les données à jour depuis les fichiers
+        self.reload_tournaments()
+
+        # 2️⃣ Affiche la liste des tournois disponibles
         return self._choose(action)
 
     # ------- Affichage du nom et des dates d’un tournoi sélectionné -------
@@ -125,24 +125,18 @@ class TournamentReports(TournamentReportsController):
         2. Demande à l'utilisateur de sélectionner un tournoi
         3. Affiche le nom et les dates si un tournoi est sélectionné
         """
-        # 1️⃣ Affiche un titre pour guider l'utilisateur
-        print("\n=== Sélectionner un tournoi pour afficher les détails ===")
+
+        # 1️⃣ Recharge les tournois à jour
+        self.reload_tournaments()
 
         # 2️⃣ Demande à l'utilisateur de choisir un tournoi
         tournament = self._pick_tournament("consulter")
 
         # 3️⃣ Si un tournoi est bien sélectionné, affiche son nom et ses dates
         if tournament:
-            print("\n--- Détails du tournoi sélectionné ---")
+            DisplayMessage.display_tournament_selected_title()
             # 🅰 Affiche le nom du tournoi
-            print(f"\nNom               : {tournament.name}")
-            print(f"Lieu              : {tournament.place}")
-            print(
-                f"Dates             : {tournament.start_date} → {tournament.end_date}"
-            )
-            print(f"Description       : {tournament.description}")
-            print(f"Nombre de rounds  : {tournament.total_rounds}")
-            print(f"Statut            : {tournament.status}\n")
+            DisplayMessage.display_tournament_details_report(tournament)
 
     # ------- Affichage des joueurs d’un tournoi sélectionné -------
     def show_tournament_players(self):
@@ -154,8 +148,8 @@ class TournamentReports(TournamentReportsController):
         3. Affiche la liste des joueurs du tournoi (triés par nom et prénom)
         4. Propose un export des données affichées
         """
-        # 1️⃣ Affiche un titre pour guider l'utilisateur
-        print("\n=== Sélectionner un tournoi pour afficher les joueurs ===")
+        # 1️⃣ Recharge les tournois à jour
+        self.reload_tournaments()
 
         # 2️⃣ Demande à l'utilisateur de choisir un tournoi
         tournament = self._pick_tournament("afficher joueurs")
@@ -163,7 +157,7 @@ class TournamentReports(TournamentReportsController):
             return
 
         # 3️⃣ Affiche le titre de la liste des joueurs pour le tournoi choisi
-        print(f"\n--- Joueurs du tournoi {tournament.name} ---")
+        DisplayMessage.display_tournament_players_title_report(tournament)
 
         # 4️⃣ Trie la liste des joueurs par NOM puis prénom
         order = sorted(tournament.players, key=lambda p: (p.last_name, p.first_name))
@@ -172,7 +166,6 @@ class TournamentReports(TournamentReportsController):
         ConsoleView.show_players(order)
 
         # 6️⃣ Prépare les données pour une exportation éventuelle
-        print("\n--- Exportation ---")
         rows = [[p.last_name, p.first_name, p.national_id] for p in order]
         headers = ["Nom", "Prénom", "ID"]
 
@@ -188,26 +181,19 @@ class TournamentReports(TournamentReportsController):
         2. Affiche les rounds et leurs matchs avec les scores
         3. Prépare les données pour une exportation éventuelle
         """
-        # 1️⃣ Affiche un titre pour guider l'utilisateur
-        print("\n=== Sélectionner un tournoi pour afficher les rounds et matches ===")
+        # 1️⃣ Recharge les tournois à jour
+        self.reload_tournaments()
 
         # 2️⃣ Demande à l'utilisateur de choisir un tournoi
         tournament = self._pick_tournament("afficher rounds & matches")
         if not tournament or not tournament.rounds:
-            print("Aucun round disponible.")
+            DisplayMessage.display_no_rounds_available()
             return
 
         # 3️⃣ Affiche tous les rounds et les matchs associés
         for idx, rnd in enumerate(tournament.rounds, 1):
-            print(f"\n🥊 Round {idx} :")
-            for m in rnd.matches:
-                p1, p2 = m.players
-                s1, s2 = m.scores
-                print(
-                    f"{p1.last_name} {p1.first_name}[{p1.national_id}] "
-                    f"{s1} - {s2} {p2.last_name} {p2.first_name}[{p2.national_id}]"
-                )
-        print()
+            DisplayMessage.display_round_details(idx)
+            DisplayMessage.display_match_details(rnd)
 
         # 4️⃣ Prépare les données sous forme tabulaire pour un export
         rows = []
@@ -285,7 +271,7 @@ class TournamentReports(TournamentReportsController):
                 f.write("</table>")
 
         # 5️⃣ Affiche un message confirmant la création du fichier
-        print(f"✓ Exporté dans : {path.resolve()}")
+        DisplayMessage.display_export_success(path)
 
     # ------- Demande et exécution d'un export de rapport -------
     def _ask_export(self, rows, headers, default_name):
