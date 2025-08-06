@@ -270,16 +270,13 @@ class PlayerController:
             DisplayMessage.display_player_not_updated()
             return None  # Abandonne la modification
 
-        # 5️⃣ Demande et met à jour les champs modifiables
-        self._update_player_fields(player)
-
-        # 6️⃣ Sauvegarde les changements dans le registre (players.json)
+        # 5️⃣ Sauvegarde les changements dans le registre (players.json)
         Player.save_all()
 
-        # 7️⃣ Confirmation et affichage des nouvelles informations
+        # 6️⃣ Confirmation et affichage des nouvelles informations
         self._confirm_player_update(player)
 
-        # 8️⃣ Retourne le joueur modifié
+        # 7️⃣ Retourne le joueur modifié
         return player
 
     # ------- Affichage des informations d'un joueur (actuelles ou mises à jour) -------
@@ -306,43 +303,54 @@ class PlayerController:
     def _update_player_fields(self, player):
         """
         Demande et met à jour les informations d'un joueur existant.
-        Étapes :
-        1. Demande un nouveau nom (vide = conserver l'ancien)
-        2. Demande un nouveau prénom (vide = conserver l'ancien)
-        3. Demande une nouvelle date de naissance (vide = conserver l'ancienne)
-            - Valide le format jj/mm/aaaa
+        Retourne True si une modification a été effectuée, sinon False.
         """
-        # 1️⃣ Demande une nouvelle identifiant national et vérifie son unicité
-        national_id = self._ask_unique_national_id()
-        if not national_id:  # 🅰 Si l'utilisateur abandonne, on sort
-            return False
-        player.national_id = national_id
+        updated = False  # ✅ Suivi des modifications
 
-        # 2️⃣ Demande un nouveau nom de famille (laisser vide pour garder l'ancien)
-        value = input(f"Nom [{player.last_name}] : ").strip()
-        if value:  # 🅰 Met le nom en majuscules si une nouvelle valeur est saisie
-            player.last_name = value.upper()
-
-        # 3️⃣ Demande un nouveau prénom (laisser vide pour garder l'ancien)
-        value = input(f"Prénom [{player.first_name}] : ").strip()
-        if value:  # 🅱 Met une majuscule initiale si une nouvelle valeur est saisie
-            player.first_name = value.capitalize()
-
-        # 4️⃣ Demande une nouvelle date de naissance
-        while True:
-            value = input(f"Date de naissance [{player.birth_date}] : ").strip()
+        # 1️⃣ Identifiant national
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            value = input(f"Identifiant national [{player.national_id}] : ").strip()
             if value == "":
-                # 🅰 Vide → on conserve la valeur actuelle et on sort
-                break
+                break  # ➜ Conserver l'ancien
+            value = value.upper()
+            if not re.match(r"AB\d{5}$", value):
+                DisplayMessage.display_not_re_match(attempt, MAX_ATTEMPTS)
+                continue
+            if any(p.national_id == value and p != player for p in Player.registry):
+                DisplayMessage.display_already_exists(attempt, MAX_ATTEMPTS)
+                continue
+            if value != player.national_id:
+                player.national_id = value
+                updated = True
+            break
+        else:
+            DisplayMessage.display_abort_operation()
+            return False
+
+        # 2️⃣ Nom
+        value = input(f"Nom [{player.last_name}] : ").strip()
+        if value and value.upper() != player.last_name:
+            player.last_name = value.upper()
+            updated = True
+
+        # 3️⃣ Prénom
+        value = input(f"Prénom [{player.first_name}] : ").strip()
+        if value and value.capitalize() != player.first_name:
+            player.first_name = value.capitalize()
+            updated = True
+
+        # 4️⃣ Date de naissance
+        value = input(f"Date de naissance [{player.birth_date}] : ").strip()
+        if value:
             try:
-                # 🅱 Vérifie que la date est bien au format jj/mm/aaaa
                 datetime.strptime(value, "%d/%m/%Y")
-                # Si c'est correct, on met à jour et on quitte la boucle
-                player.birth_date = value
-                break
+                if value != player.birth_date:
+                    player.birth_date = value
+                    updated = True
             except ValueError:
-                # 🅲 Si le format est incorrect, on indique l'exemple attendu
                 DisplayMessage.display_error_format_date()
+
+        return updated
 
     # ------- Confirmation et affichage des informations mises à jour d'un joueur -------
     def _confirm_player_update(self, player):
