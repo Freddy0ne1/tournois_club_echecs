@@ -244,7 +244,7 @@ class DisplayMessage:
         print(f"Lieu du tournoi      : {tournament.place}")
         print(f"Date de début        : {tournament.start_date} → {tournament.end_date}")
         print(f"Description          : {tournament.description}\n")
-        print(f"Nombre de tours      : {tournament.rounds}")
+        print(f"Nombre de tours      : {tournament.total_rounds}")
 
     # -----------------------
     #   MODIFICATION TOURNOI
